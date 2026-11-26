@@ -138,5 +138,44 @@ screens.pdetail=v=>{const p=P(v.id),buyer=!isBiz();
   return page({title:esc(p.name),sub:BIZ.st.name,hero:`<div class="pg-photo" style="background:${p.color}"><span>${p.code}</span><small>Photo shown as a colour block in this prototype</small></div>`+hero(buyer?"Price":"Retail price",money(p.price),buyer?"GST extra · BOC Protect on every order":`Wholesale ${money(p.whole)} · cost ${money(p.cost)}`),
     body:group("Details",[item({t:"Options",s:p.vars.map(esc).join(" · ")}),item({t:"Stock",s:`${p.stock} ${p.unit} available`,vl:p.stock<=p.reorder?"Low":"",tone:"bad"}),item({t:"About",s:esc(p.desc)}),item({t:"HSN",s:p.hsn})].join("")),
     cta:buyer?`<button class="pg-btn" data-act="cporder" data-id="${p.id}">Order · ${money(p.price)}${ic("chevr","s")}</button>`:""})};
+/* ---------- round 6: assistant, auto-replies, quick replies, broadcasts, directory, verification ---------- */
+const tgs=rows=>`<div class="pg-list pg-tg">${rows.join("")}</div>`;
+const sec=(t,inner,aside="")=>`<section class="pg-g"><div class="pg-gh"><h2>${t}</h2>${aside?`<span>${aside}</span>`:""}</div>${inner}</section>`;
+screens.assistant=()=>{const a=S.ai,modes=[["off","Off"],["suggest","Suggest only"],["auto","Reply for me"]];
+  const say={auto:"Answers customers within the limits below and hands the chat to your team when it should.",suggest:"Drafts a reply in each chat. Nothing goes out until you tap Send.",off:"Your team answers every message."}[a.mode];
+  return page({title:"AI assistant",sub:"Answers customers for Shree Textiles",
+    hero:hero("Answered today",String(a.answered),`${a.handed} handed to your team · customers always see a reply is automated`),
+    tabs:`<div class="pg-seg" role="radiogroup" aria-label="How it replies">${modes.map(([k,l])=>`<button role="radio" aria-checked="${a.mode===k}" class="${a.mode===k?"on":""}" data-act="aimode" data-m="${k}">${l}</button>`).join("")}</div><p class="pg-p" style="margin:8px 18px 0">${say}</p>`,
+    body:sec("What it knows",tgs([tg("ai.know","catalog","Products and prices",S.products.filter(p=>p.vis!=="Hidden").length+" products, public prices only"),tg("ai.know","stock","Stock levels","In stock or out, never exact wholesale stock"),tg("ai.know","hours","Hours and location",BIZ.st.hours),tg("ai.know","policy","Delivery and returns","Shipping times, charges, 7-day returns"),tg("ai.know","faq","Your saved answers",S.quick.length+" quick replies")]))+
+      sec("What it may do",tgs([tg("ai.perm","prices","Answer price and availability",""),tg("ai.perm","cards","Send product cards",""),tg("ai.perm","drafts","Start an order for the customer to confirm",""),tg("ai.perm","paylink","Send payment requests","Off: payment requests always come from a person")]))+
+      group("Always hands to a person when",["Customer asks for a discount or bargains","Complaint, return or damaged item","Customer asks for a human","Order above "+money(a.limit),"It can't answer twice in a row"].map(t=>item({lead:ico("user"),t:esc(t)})).join("")),
+    cta:`<button class="pg-btn" data-act="trycust">Try it as a customer${ic("chevr","s")}</button>`})};
+screens.automations=()=>{const on=Object.values(S.auto).filter(v=>v===true).length;
+  return page({title:"Auto-replies",sub:"Messages and reminders that send themselves",hero:hero("Switched on",`${on} <small>of 4</small>`,"Each one sends only when its trigger happens"),
+    body:sec("Messages",tgs([tg("auto","greeting","Greeting","“"+S.greetingText+"”"),tg("auto","away","Away message","“"+S.awayText+"”")]))+
+      sec("Reminders",tgs([tg("auto","remind","Payment reminders","3 days before an invoice is due, and on the day"),tg("auto","reorder","Low-stock suggestions","Adds a restock task to Pending at the reorder level")])),
+    cta:`<button class="pg-btn" data-act="simnew">Simulate a new customer${ic("chevr","s")}</button>`})};
+screens.quick=()=>page({title:"Quick replies",sub:"Type / in any chat to use one",hero:hero("Saved replies",String(S.quick.length),"Shared with your whole team"),
+  body:group("Your replies",S.quick.map(q=>item({lead:`<span class="pg-ic mint" style="font-weight:600">/</span>`,t:esc(q.k),s:esc(q.t)})).join("")),
+  cta:`<button class="pg-btn" data-act="qadd">Add a quick reply${ic("chevr","s")}</button>`});
+act.qadd=()=>{const k="/reply"+(S.quick.length+1);S.quick.push({k,t:"Thanks for writing to Shree Textiles. We'll reply shortly."});toast(`Added ${k}. Edit the text in the real app.`);render()};
+screens.broadcast=()=>{const b=S.bc||(S.bc={aud:"All customers",tpl:0});
+  const tpls=["Our Diwali silk collection is here. Reply YES for the lookbook.","New stock: linen shirting in 6 colours, wholesale from ₹6,900 a roll.","This week only: 20% off Chanderi dupattas."];
+  const auds={"All customers":214,"Wholesale buyers":38,"New customers":61};
+  (S.labels||[]).filter(l=>!["BOC","Team","Paid","Supplier"].includes(l.name)).forEach(l=>{const n=S.chats.filter(c=>(c.labels||[]).includes(l.name)).length;if(n)auds["Label: "+l.name]=n});
+  const n=auds[b.aud]||0,used=S.campaigns.reduce((a,c)=>a+c.sent,0),lim=limitFor("st","msgs");
+  return page({title:"Broadcasts",sub:"Only to contacts who opted in",hero:hero("Messages this month",`${used.toLocaleString("en-IN")} <small>of ${lim.toLocaleString("en-IN")}</small>`,"Extra messages ₹0.20 each (example pricing)"),
+    tabs:tabs("bc",[["new","New broadcast"],["res","Results",S.campaigns.length]],T("bc")||"new"),
+    body:(T("bc")||"new")==="new"?
+      sec("Send to",`<div class="frow" style="padding:0">${Object.keys(auds).map(a=>`<button class="fc ${b.aud===a?"on":""}" data-act="bcaud" data-a="${esc(a)}">${esc(a.replace("Label: ",""))} <span class="num">${auds[a]}</span></button>`).join("")}</div>`)+
+      sec("Message",`<div class="pg-list">${tpls.map((t,i)=>`<button class="pg-i pg-pick ${b.tpl===i?"on":""}" data-act="bctpl" data-i="${i}" role="radio" aria-checked="${b.tpl===i}"><span class="pg-dot"></span><span class="pg-m"><small style="color:var(--ink);font-size:14px;-webkit-line-clamp:3">${esc(t)}</small></span></button>`).join("")}</div>`)
+      :group("Sent",S.campaigns.slice().reverse().map(c=>item({lead:ico("mega"),t:esc(c.name),s:`${esc(c.aud)} · ${c.sent} sent · ${c.read} read · ${c.click} clicked`,v:String(c.orders),vl:c.done?"orders":"Sending",tone:c.done?"":"tint"})).join("")),
+    cta:(T("bc")||"new")==="new"?`<button class="pg-btn" data-act="bcsend" data-n="${n}" data-t="${esc(tpls[b.tpl])}">Send to ${n} ${n===1?"person":"people"}${ic("chevr","s")}</button>`:""})};
+screens.directory=()=>page({title:"Find businesses",sub:"Suppliers and buyers, verified by GSTIN",
+  body:group("Near you",DIR.map((x,i)=>item({lead:av(x.n,PARTY[(i+3)%10],40),t:esc(x.n)+" "+ic("shield","s"),s:`${esc(x.cat)} · ${esc(x.city)}`,v:x.r+"★",act:"dirmsg",data:`data-i="${i}"`})).join(""))});
+screens.verification=()=>{const b=BIZ.st,checks=[["phone","Phone number","OTP on the registered mobile"],["gst","GSTIN",b.gstin],["udyam","Udyam",b.udyam],["kyc","Owner identity","Aadhaar e-KYC"],["bank","Bank account",S.payout.bank+" · name matched"]];
+  return page({title:"Verification",sub:"What buyers see before they pay you",hero:hero("Trust level","Trusted seller",`${b.orders.toLocaleString("en-IN")} orders · ${b.rating}★ from ${b.reviews} reviews`),
+    body:group("Checks",checks.map(([k,t,s])=>item({lead:ico(b.lv[k]?"check":"close",b.lv[k]?"good":"bad"),t,s:esc(s||"Not on file"),vl:b.lv[k]?"Verified":"Missing",tone:b.lv[k]?"good":"bad"})).join(""))+group("Pickup address",item({lead:ico("pin"),t:"42 Town Hall Road",s:"Coimbatore 641001"})),
+    cta:`<button class="pg-btn ghost" data-act="bizprofile" data-id="st">See what customers see</button>`})};
 render();
 })();
