@@ -74,3 +74,17 @@ Android and iOS keep their own navigation conventions (Material bar vs iOS tab b
 ## Voice
 
 Plain, short, specific. Controls name the action ("Pay balance ₹640", "Book pickup", "Open what's waiting"). Example data is labelled as example data.
+
+## Ledger layer (2026-11-26, from the Ledgerix reference by Rondesignlab)
+
+Applied on top of the structure above at the founder's request; where they differ, this wins.
+
+- Tokens: ground #EFEFF1, cards #FFFFFF with 16px corners and a soft shadow instead of borders, ink #111214, secondary #75767C, active = near-black #111214, action/growth = neon green #7DF18A, red #E5484D.
+- Type: Urbanist (geometric). Screen titles 28px/600; hero figures 36-40px/500, centred; card and group titles 11px uppercase, 0.08em tracking.
+- Tabs: text with a black underline. Filters: white pills, black when on.
+- Icons sit in 12px-radius grey squares; the main action's square is green.
+- Bottom bar floats (white, 20px radius), icon in a square, active square black, small label kept for clarity (elevation over the reference's icon-only bar).
+- Dark AI bar "Ask anything or search" with suggestion chips above the bottom bar on owner Chats, Pending and Business; answers come from the business's own chats, invoices and stock.
+- Business home: centred year total, then a dense grey bar chart with a black trend line and a floating value card with a green growth pill.
+- Score card stays black with a green gauge ring around the grade.
+- Admin console: same tokens; sidebar on the ground colour with a black active pill.

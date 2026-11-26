@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BOC Admin</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap">
 <style>
 /* BOC admin console for the BOC team: dense desktop tool in the Shade Card system. Example data only. */
 :root{
@@ -113,6 +113,26 @@ select,input[type=search],input[type=text],textarea{border-radius:3px}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bar i{background:var(--mint)}}
 .toast{background:var(--jet);border-radius:3px}
 @media (max-width:860px){.nav button.on{box-shadow:inset 0 -2px 0 var(--mint)}}
+/* Ledger theme (Ledgerix reference): light grey ground, white 16px cards, black active, neon green action */
+:root,:root[data-theme="light"]{--jet:#111214;--mint:#7DF18A;--ground:#EFEFF1;--card:#fff;--sunk:#F4F4F6;--line:#E6E6EA;--ink:#111214;--ink2:#75767C;--good:#1E9E45;--good-soft:#E8FCEA;--bad:#E5484D;--bad-soft:#FDECEC;--amber:#B97A06;--f-ui:"Urbanist","Inter",system-ui,sans-serif;--f-num:"Urbanist","Inter",system-ui,sans-serif;--f-code:"Urbanist","Inter",system-ui,sans-serif;--sh:0 1px 2px rgba(17,18,20,.04),0 8px 24px -12px rgba(17,18,20,.10)}
+.side{background:var(--ground);color:var(--ink);border-right:0}
+.brand small{color:var(--ink2)}.logo{background:var(--jet);color:var(--mint);border-radius:10px}
+.nav button{color:var(--ink2);border-radius:12px;font-weight:500}.nav button:hover{background:var(--card)}
+.nav button.on{background:var(--jet);color:#fff;box-shadow:none}
+.cnt.z{background:var(--sunk);color:var(--ink2)}
+.top h1{font-weight:600;letter-spacing:-.03em}
+.panel,.kpi{border:0;border-radius:18px;box-shadow:var(--sh)}
+.ph{border-bottom:1px solid var(--sunk)}
+.ph h2,th{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+th{border-bottom:1px solid var(--line);background:var(--card)}
+td{border-bottom:1px solid var(--sunk)}
+.kpi .l{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.kpi .v{font-weight:500;font-size:32px;letter-spacing:-.035em}
+.btn{border-radius:12px;background:var(--mint);color:var(--jet);font-weight:600}
+.btn.ghost{background:var(--card);border:0;box-shadow:var(--sh)}
+select,input[type=search],input[type=text],textarea{border:0;border-radius:12px;box-shadow:var(--sh)}
+.bar i{background:var(--jet);border-radius:3px}.note{border-radius:12px;background:var(--sunk)}
+@media (max-width:860px){.nav button.on{box-shadow:none}}
 </style>
 </head>
 <body>

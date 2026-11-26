@@ -1,0 +1,186 @@
+/* BOC · Ledger theme, from the Ledgerix reference (Rondesignlab) the founder chose on 2026-11-26.
+   Light grey ground, white 16px cards, near-black for "active", neon green for the next action and growth,
+   Urbanist geometric type, tiny uppercase card titles, centred hero figures, dense bar charts with a line,
+   a floating icon bar and a dark "Ask anything" AI bar. Loaded after calm.css and overrides it. */
+:root,:root[data-theme="light"]{
+  --jet:#111214; --mint:#7DF18A; --cyan:#F4F4F5;
+  --ground:#EFEFF1; --card:#FFFFFF; --sunk:#F4F4F6; --line:#E6E6EA; --ink:#111214; --ink2:#75767C;
+  --tint:#111214; --tint-ink:#FFFFFF; --tint-soft:#F4F4F6;
+  --wait:#7DF18A; --wait-ink:#111214; --wait-soft:#E8FCEA;
+  --good:#1E9E45; --good-soft:#E8FCEA; --bad:#E5484D; --bad-soft:#FDECEC; --amber:#B97A06; --mute:#8D8E94;
+  --bubble-me:#E8FCEA; --bubble-them:#FFFFFF; --chatbg:#EFEFF1; --scrim:rgba(17,18,20,.42);
+  --f-ui:"Urbanist","Inter",system-ui,sans-serif; --f-num:"Urbanist","Inter",system-ui,sans-serif; --f-code:"Urbanist","Inter",system-ui,sans-serif;
+  --sh:0 1px 2px rgba(17,18,20,.04),0 8px 24px -12px rgba(17,18,20,.10);
+}
+body{font-family:var(--f-ui);letter-spacing:-.005em;font-feature-settings:"tnum" 1}
+.num{font-family:var(--f-num);font-weight:500;letter-spacing:-.01em}
+::selection{background:var(--mint);color:var(--jet)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--jet);outline-offset:2px}
+
+/* guide column */
+.guide h1{font-weight:500;letter-spacing:-.03em}
+.seg{border-radius:12px;border:1px solid var(--line);padding:3px;background:var(--card)}
+.seg button{border-radius:9px}
+.seg button.on{background:var(--jet);color:#fff}
+.flow{border-bottom:1px solid var(--line)}
+.flow .ft{border-radius:12px;background:var(--sunk)!important;color:var(--jet)}
+.flow:hover .ft{background:var(--mint)!important}
+.phone{border-radius:46px}
+
+/* screen chrome */
+.status,.big,.body,.pg,.pg-top{background:var(--ground)}
+.big h1,.os-ios .big h1{font-weight:600;font-size:28px;letter-spacing:-.03em}
+.hdr{background:var(--ground);border-bottom:0}
+.hdr h2{font-weight:600}
+.pg-h h1{font-weight:600;font-size:28px;letter-spacing:-.03em}
+.pg-back,.ib{border-radius:12px;background:var(--card);border:0;box-shadow:var(--sh)}
+
+/* tiny uppercase titles on cards and groups */
+.pg-gh h2,.secttl h3,.dash-total .l,.pg-hero .l,.stat2 .l,.score .l,.needs-h h2,.duelist .grp,.lab,.sec h4{
+  font-size:11px!important;font-weight:600!important;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)!important}
+.secttl h3{letter-spacing:.08em}
+
+/* cards: white, 16px, soft shadow, no hard borders */
+.pg-list,.glist,.clist,.duelist,.problems,.notes,.pg-stats,.stat2>div,.pg-empty,.needs,.score,.pg-hero,.tile,.m.card,.banner,.tool,.pg-card,.qa button,.stagebar button,.lpick button{
+  border:0!important;box-shadow:var(--sh)}
+.pg-list,.glist,.duelist,.problems,.notes,.pg-stats,.pg-card{border-radius:16px}
+.clist{margin:0 12px;border-radius:16px;overflow:hidden;background:var(--card)}
+.pg-list>*+*,.glist>*+*,.crow+.crow{border-top:1px solid var(--sunk)}
+.stat2{gap:10px}.stat2>div{border-radius:16px!important}.stat2>div+div{border-left:0}
+
+/* hero: white card, big centred figure */
+.pg-hero{background:var(--card);color:var(--ink);border-radius:18px;text-align:center;padding:18px 16px 16px}
+.pg-hero .v{font-size:36px;font-weight:500;letter-spacing:-.035em}
+.pg-hero .v small{color:var(--ink2)}
+.pg-hero .n{color:var(--ink2)}
+.pg-hero .st-bad{color:var(--bad)!important}
+.pg-chart i{background:#DADBDF;border-radius:2px}
+.pg-chart .cur i{background:var(--jet)}
+.pg-chart span{color:var(--ink2)}
+.dash-total{text-align:center;padding:14px 16px 4px}
+.dash-total .v{font-size:40px;font-weight:500;letter-spacing:-.04em}
+
+/* tabs: text with an underline, like Week / Month / Quarter / Year */
+.pg-tabs,.dash-tabs{border-bottom:0;justify-content:flex-start}
+.pg-tabs button.on,.dash-tabs button.on{border-bottom-color:var(--jet);font-weight:600}
+.pg-seg{background:var(--card);box-shadow:var(--sh)}
+.pg-seg button.on{background:var(--jet);color:#fff;box-shadow:none}
+
+/* filters and pills */
+.fc,.os-ios .fc,.frow .fc{border:0;background:var(--card);box-shadow:var(--sh);border-radius:12px;font-weight:500}
+.fc.on{background:var(--jet);color:#fff}
+.sbar{border:0;border-radius:14px;box-shadow:var(--sh)}
+.cu,.needs-h h2 .num,.badge,.nav .dot{background:var(--mint);color:var(--jet)}
+
+/* icons in squares: grey square, black icon; mint square for the main thing */
+.ni,.pg-ic,.pg-sw{border-radius:12px}
+.ni,.pg-ic{background:var(--sunk);color:var(--jet)}
+.pg-ic.mint{background:var(--mint)}
+.tool .ti,.flow .ft{border-radius:12px}
+.tool .ti{background:var(--sunk)!important;color:var(--jet)}
+
+/* "Waiting on you": white card, green count */
+.needs{background:var(--card)!important;color:var(--ink);border-radius:18px}
+.needs .needs-i{color:var(--ink);border-top:1px solid var(--sunk)}
+.needs .needs-i small{color:var(--ink2)}
+.needs .ni{background:var(--sunk);color:var(--jet)}
+.needs .ni.bad{background:var(--bad-soft);color:var(--bad)}
+.needs .linkbtn{color:var(--ink);text-decoration-color:var(--line)}
+
+/* score card: black with a green gauge */
+.score{background:var(--jet);border-radius:18px}
+.score .grade{border:0;background:conic-gradient(var(--mint) var(--p,70%),rgba(255,255,255,.12) 0);position:relative;font-weight:500}
+.score .grade::before{content:"";position:absolute;inset:5px;border-radius:50%;background:var(--jet)}
+.score .grade>*{position:relative}
+.score button{background:var(--mint);border-radius:12px}
+.duestrip .d{border:0;border-radius:12px;box-shadow:var(--sh)}
+.duestrip .d.on{background:var(--jet)}
+
+/* buttons: green primary, white secondary */
+.pg-btn,.btn,.os-ios .btn{background:var(--mint);color:var(--jet);border-radius:14px;font-weight:600;box-shadow:none}
+.pg-btn.ghost,.btn.ghost,.btn.tonal{background:var(--card);color:var(--ink);border:0;box-shadow:var(--sh)}
+.pg-cta{background:linear-gradient(to top,var(--ground) 72%,rgba(239,239,241,0))}
+.acts button.pri,.acts button.pay,.acts button.wait{background:var(--mint);color:var(--jet)}
+.dash-actions button{border:0;box-shadow:var(--sh);background:var(--card)}
+.dash-actions button:first-child{background:var(--jet)}
+
+/* chat */
+.chat{background:var(--chatbg)}
+.m{border:0;border-radius:16px;box-shadow:var(--sh)}
+.m.me{background:var(--bubble-me);box-shadow:none}
+.ch{border-bottom:1px solid var(--sunk)}
+.ch.t-wait{background:var(--mint)!important}
+.composer{background:var(--ground);border-top:0}
+.composer input{border:0;box-shadow:var(--sh);background:var(--card)}
+.round{background:var(--jet);color:var(--mint)}
+.banner.ok{background:var(--good-soft);color:var(--ink)}
+.banner.warn{border:0;background:var(--bad-soft)}
+.hstrip .chip{border:0;box-shadow:var(--sh);border-radius:12px}
+.hstrip .chip.t-wait{background:var(--mint)!important}
+.hlabels{background:var(--ground);border-bottom:0}
+.lp{border-radius:8px}
+
+/* floating icon bar (bottom navigation) */
+.nav,.os-ios .nav{position:absolute;left:12px;right:12px;bottom:12px;height:64px;border-radius:20px;background:var(--card);box-shadow:0 10px 30px -10px rgba(17,18,20,.25);padding:6px;gap:4px;z-index:6}
+.nav button,.os-ios .nav button{color:var(--ink2);font-size:10.5px;font-weight:600;border-radius:14px;gap:2px;padding:4px 0}
+.nav button .pill,.os-android .nav button .pill,.os-ios .nav .pill{width:38px;height:30px;border-radius:10px;display:grid;place-items:center;background:none}
+.nav button.on,.os-android .nav button.on,.os-ios .nav button.on{color:var(--jet)}
+.nav button.on .pill,.os-android .nav button.on .pill,.os-ios .nav button.on .pill{background:var(--jet);color:#fff}
+.nav button.on::before{display:none}
+.nav .dot{top:2px}
+.body{padding-bottom:84px}
+.fab{bottom:88px;border-radius:16px;background:var(--jet);color:var(--mint);box-shadow:0 10px 24px -10px rgba(17,18,20,.45)}
+.pg-cta{bottom:80px}
+.pg-cta:last-child{bottom:0}
+
+/* dark AI command bar */
+.aibar{position:absolute;left:12px;right:12px;bottom:86px;z-index:5;display:grid;gap:6px}
+.aibar .sug{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.aibar .sug button{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:0;border-radius:10px;background:#2A2B2F;color:#D7D8DC;font:inherit;font-size:12px;cursor:pointer}
+.aibar .sug button i{width:6px;height:6px;border-radius:50%;background:var(--mint)}
+.aibar .bar{display:flex;align-items:center;gap:8px;height:52px;padding:6px;border-radius:16px;background:#1B1C1F;box-shadow:0 12px 30px -12px rgba(0,0,0,.5);cursor:pointer;border:0;width:100%;font:inherit;text-align:left}
+.aibar .bar .go{width:40px;height:40px;border-radius:12px;background:var(--mint);color:var(--jet);display:grid;place-items:center;flex:0 0 auto}
+.aibar .bar span{flex:1;color:#B6B7BC;font-size:14px;text-align:center}
+.aibar .bar .k{flex:0 0 32px!important;width:32px;height:32px;border-radius:10px;background:#2A2B2F;color:#D7D8DC;display:grid;place-items:center}
+.has-ai{padding-bottom:170px!important}
+
+/* bar chart with a line, like the income chart */
+.lchart{margin:10px 16px 0;background:var(--card);border-radius:18px;box-shadow:var(--sh);padding:14px 14px 10px;position:relative}
+.lchart .lh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.lchart .lh b{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.lchart .lg{display:flex;gap:10px;font-size:12px;color:var(--ink2)}
+.lchart .lg i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}
+.lchart .plot{position:relative;height:120px}
+.lchart .bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:2px}
+.lchart .bars i{flex:1;background:#DCDDE1;border-radius:1px}
+.lchart .bars i.hi{background:#5C5D63}
+.lchart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.lchart .tip{position:absolute;left:46%;top:44%;transform:translateX(-50%);background:var(--card);border-radius:12px;box-shadow:0 8px 24px -8px rgba(17,18,20,.3);padding:8px 10px;font-size:12px;white-space:nowrap}
+.lchart .tip b{font-size:15px;font-weight:600;margin-right:6px}
+.gp{display:inline-block;padding:1px 7px;border-radius:7px;background:var(--mint);color:var(--jet);font-size:11px;font-weight:700}
+.lchart .tip small{display:block;color:var(--ink2);margin-top:2px}
+.lchart .ax{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--ink2)}
+
+/* app header on tab roots: wordmark, AI button, avatar */
+.lx-top{display:flex;align-items:center;gap:8px;padding:6px 16px 0;background:var(--ground)}
+.lx-top .wm{display:flex;align-items:center;gap:6px;font-weight:700;letter-spacing:-.02em;margin-right:auto}
+.lx-top .wm i{width:22px;height:22px;border-radius:6px;background:var(--jet);color:var(--mint);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:800}
+.lx-top .ai{width:36px;height:36px;border-radius:11px;background:var(--mint);color:var(--jet);display:grid;place-items:center;border:0;cursor:pointer}
+.lx-top .av{border-radius:11px!important}
+
+/* AI answer sheet */
+.aians{background:var(--sunk);border-radius:16px;padding:14px;margin-top:10px}
+.aians .who{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);margin-bottom:6px}
+.aians .who i{width:22px;height:22px;border-radius:7px;background:var(--mint);display:grid;place-items:center;color:var(--jet)}
+.aians p{margin:0;font-size:15px;line-height:1.45}
+.aians .big2{font-size:30px;font-weight:600;letter-spacing:-.03em;margin:4px 0}
+.aiqs{display:grid;gap:6px}
+.aiqs button{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;border:0;border-radius:12px;background:var(--card);box-shadow:var(--sh);font:inherit;text-align:left;color:var(--ink);cursor:pointer}
+.aiqs button.on{background:var(--jet);color:#fff}
+.aiqs button i{width:7px;height:7px;border-radius:50%;background:var(--mint);flex:0 0 auto}
+.sheet,.os-ios .sheet{border-radius:24px 24px 0 0;background:var(--ground)}
+
+.tmap>div{gap:2px;justify-content:flex-start}
+.tmap b{font-weight:600}
+.tmap span{display:block}
+.tmap .num{margin-top:auto;font-weight:600}.has-ai ~ .fab{bottom:200px}
