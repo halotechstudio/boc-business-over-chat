@@ -4,6 +4,6 @@ test("guide flows run without errors",()=>{
   setView("owner");
 });
 test("all screens render",()=>{
-  Object.keys(screens).forEach(k=>{try{S.stack=[{name:"tab"},{name:k,id:{pdetail:"p1",contact:"c1"}[k]||"st"}];render()}catch(e){throw new Error("screen "+k+": "+e.message)}});
+  Object.keys(screens).forEach(k=>{try{S.stack=[{name:"tab"},{name:k,id:{pdetail:"p1",contact:"c1",ckmedia:"c1",ckstarred:"c1",ckginfo:"g1"}[k]||"st"}];render()}catch(e){throw new Error("screen "+k+": "+e.message)}});
   S.stack=[{name:"tab"}];render();
 });

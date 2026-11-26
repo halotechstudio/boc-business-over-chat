@@ -36,7 +36,7 @@ const relDay=ts=>{const d=Math.round((ts-Date.now())/DAY);return d<-1?`${-d} day
 /* ---------- Chats ---------- */
 const FILTERS_BIZ=["All","Unread","Follow up","Customers","Wholesale","Suppliers","Team"];
 function matchFilter(c,f){const u=isBiz()?c.unread:c.unreadC;
-  switch(f){case "All":return true;case "Unread":return!!u;case "Follow up":return followDue(c);case "Customers":return c.kind==="customer";case "Wholesale":return c.kind==="b2b";case "Suppliers":return c.kind==="supplier";case "Team":return c.kind==="team";
+  switch(f){case "All":case "Archived":return true;case "Unread":return!!u;case "Follow up":return followDue(c);case "Customers":return c.kind==="customer";case "Wholesale":return c.kind==="b2b";case "Suppliers":return c.kind==="supplier";case "Team":return c.kind==="team";
     default:return(c.labels||[]).includes(f)}}
 function needsYou(){const p=pending(),items=[];
   p.sign.forEach(d=>items.push({id:d.id,t:"Sign the contract",who:party(d.chat),icon:"pen"}));
@@ -53,23 +53,25 @@ window.needsYou=needsYou;
 const _chatList=chatList;
 window.chatList=chatList=function(){
   const q=(S.q||"").toLowerCase(),f=S.filter||"All";
-  const list=S.chats.filter(visibleChat).filter(c=>matchFilter(c,f)).filter(c=>!q||[chatTitle(c),(c.labels||[]).join(" "),(c.msgs[c.msgs.length-1]||{}).text||""].join(" ").toLowerCase().includes(q))
-    .sort((a,b)=>(b.ts||0)-(a.ts||0));
+  const list=S.chats.filter(visibleChat).filter(c=>matchFilter(c,f)).filter(c=>f==="Archived"?c.archived:!c.archived).filter(c=>!q||[chatTitle(c),(c.labels||[]).join(" "),(c.msgs[c.msgs.length-1]||{}).text||""].join(" ").toLowerCase().includes(q))
+    .sort((a,b)=>(f!=="Archived"&&(+!!b.pinned-+!!a.pinned))||(b.ts||0)-(a.ts||0));
+  const archN=S.chats.filter(c=>visibleChat(c)&&c.archived).length;
+  const arch=f==="All"&&!q&&archN?`<button class="crow arch" data-act="filt" data-v="Archived"><span class="ni">${ic("archive","s")}</span><span class="cm"><span class="cn"><b>Archived</b><time>${archN}</time></span></span></button>`:f==="Archived"?`<button class="crow arch" data-act="filt" data-v="All"><span class="ni">${ic("arrow","s")}</span><span class="cm"><span class="cn"><b>Back to all chats</b></span></span></button>`:"";
   const usedLabels=[...new Set(S.chats.filter(c=>!c.custOnly).flatMap(c=>c.labels||[]))].filter(n=>!["Team","BOC","Paid"].includes(n));
   const filters=isBiz()?[...FILTERS_BIZ,...usedLabels.filter(n=>!FILTERS_BIZ.includes(n))]:["All","Unread"];
   const ny=isBiz()?needsYou():[];
   const needs=ny.length?`<section class="needs" aria-label="Waiting on you"><div class="needs-h"><h2>Waiting on you <span class="num">${ny.length}</span></h2><button class="linkbtn" data-act="tab" data-t="pending">See all</button></div>
     ${ny.slice(0,3).map(x=>`<button class="needs-i" ${x.id?`data-act="dopen" data-id="${x.id}"`:`data-act="open" data-id="${x.cid}"`}><span class="ni ${x.bad?"bad":""}">${ic(x.icon,"s")}</span><span class="nt"><b>${esc(x.t)}</b><small>${esc(x.who)}${x.id?" · "+code(x.id):""}</small></span>${x.amt?`<span class="num na">${money(x.amt)}</span>`:""}${ic("chevr","s")}</button>`).join("")}</section>`:"";
   const rows=list.map(c=>{const last=[...c.msgs].reverse().find(m=>m.by!=="sys")||c.msgs[c.msgs.length-1]||{};const u=isBiz()?c.unread:c.unreadC;
-    const prev=last.type==="text"?last.text:last.type==="doc"?(KIND[(D(last.ref)||{}).kind]||"Document")+" "+code(last.ref||""):last.type==="payment"?"Payment "+money(last.amount):last.text||"";
+    const prev=last.type==="text"?last.text:last.type==="doc"?(KIND[(D(last.ref)||{}).kind]||"Document")+" "+code(last.ref||""):last.type==="payment"?"Payment "+money(last.amount):last.text||({image:"Photo",file:"Document",location:"Location",contact:"Contact card",poll:"Poll",voice:"Voice message",services:"Services and prices",subplans:"Delivery plans",rentals:"Rental quote",batchitem:"Product",product:"Product",statusreply:"Replied to a status"})[last.type]||"";
     const b=!isBiz()&&BIZ[c.biz];
-    return `<button class="crow ${u?"unread":""}" data-act="open" data-id="${c.id}">${av(chatTitle(c),chatColor(c),46)}<span class="cm"><span class="cn"><b>${esc(chatTitle(c))}</b>${b&&verified(b)?vbadge(b):""}<time>${esc(last.time||"")}</time></span><span class="cp">${last.by===side()?"You: ":""}${esc(prev)}</span>${isBiz()&&(c.labels||[]).length?`<span class="cl">${labelPills(c)}</span>`:""}</span>${u?`<span class="cu num" aria-label="${u} unread">${u}</span>`:followDue(c)&&isBiz()?`<span class="cf" title="Follow up due">${ic("clock","s")}</span>`:""}</button>`}).join("");
+    return `<button class="crow ${u?"unread":""}" data-act="open" data-id="${c.id}">${av(chatTitle(c),chatColor(c),46)}<span class="cm"><span class="cn"><b>${esc(chatTitle(c))}</b>${b&&verified(b)?vbadge(b):""}${c.muted?`<span class="ck-ri" title="Muted">${ic("mute","s")}</span>`:""}${c.pinned?`<span class="ck-ri" title="Pinned">${ic("pinx","s")}</span>`:""}<time>${esc(last.time||"")}</time></span><span class="cp">${c.kind==="group"?ic("group","s")+" ":""}${last.by===side()?"You: ":last.from&&c.kind==="group"?esc(last.from.split(" ")[0])+": ":""}${esc(prev)}</span>${isBiz()&&(c.labels||[]).length?`<span class="cl">${labelPills(c)}</span>`:""}</span>${u?`<span class="cu num" aria-label="${u} unread">${u}</span>`:followDue(c)&&isBiz()?`<span class="cf" title="Follow up due">${ic("clock","s")}</span>`:""}</button>`}).join("");
   return status()+big("Chats",isBiz()?`<button class="ib" data-act="go" data-s="customers" aria-label="Contacts and CRM">${ic("users")}</button>`:"")+`<div class="body">
     <div class="sbar">${ic("search","s")}<input id="q" type="search" placeholder="Search names, labels, messages" value="${esc(S.q||"")}" aria-label="Search chats"></div>
     ${f==="All"&&!q?needs:""}
     <div class="frow" role="tablist">${filters.map(x=>`<button class="fc ${f===x?"on":""}" data-act="filt" data-v="${esc(x)}" role="tab" aria-selected="${f===x}">${S.labels.some(l=>l.name===x)?`<i class="ld" style="background:${labelColor(x)}"></i>`:""}${esc(x)}</button>`).join("")}</div>
-    <div class="clist">${rows||`<div class="empty-s"><b>No chats here</b><span>${f==="Follow up"?"No follow-ups due. Set one from a contact's profile.":"Try another filter or search."}</span></div>`}</div>
-    <div style="height:84px"></div></div>${isBiz()?`<button class="fab" data-act="newchat" aria-label="New chat">${ic("plus")}</button>`:""}`+nav()};
+    <div class="clist">${arch}${rows||`<div class="empty-s"><b>No chats here</b><span>${f==="Follow up"?"No follow-ups due. Set one from a contact's profile.":"Try another filter or search."}</span></div>`}</div>
+    <div style="height:84px"></div></div><button class="fab" data-act="newchat" aria-label="New chat">${ic("plus")}</button>`+nav()};
 act.filt=e=>{S.filter=e.dataset.v;render()};
 if(!act.newchat)act.newchat=()=>{S.sheet={type:"newchat"};render()};
 

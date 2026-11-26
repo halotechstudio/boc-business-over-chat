@@ -16,12 +16,14 @@
   try{window.addEventListener("storage",e=>{if(e.key===KEY){const s=BOCStore.load();subs.forEach(f=>f(s))}})}catch(e){}
 
   const PLANS={
-    free:{name:"Free",price:0,limits:{users:1,items:50,msgs:100},features:[]},
-    pro:{name:"Pro",price:299,limits:{users:5,items:Infinity,msgs:1000},features:["webshop","khata","gstreports"]},
-    business:{name:"Business",price:999,limits:{users:25,items:Infinity,msgs:5000},features:["webshop","khata","gstreports","credit","pricelists","einvoice","purchasing","contracts","multiloc"]}
+    free:{name:"Free",price:0,year:0,limits:{users:1,items:25,msgs:100},features:["Unlimited chats, any number","Catalog up to 25 items","Payment links to your own UPI","20 invoices a month"]},
+    starter:{name:"Starter",price:199,year:1990,limits:{users:2,items:200,msgs:500},features:["Unlimited GST invoices and khata","Labels and CRM","Auto-replies and quick replies","1 connection (gateway, courier or accounting)"]},
+    pro:{name:"Growth",price:599,year:5990,limits:{users:5,items:Infinity,msgs:2000},features:["All connections: gateways, couriers, Tally and Zoho","AI assistant, 500 replies a month","Credit terms, purchasing, contracts","Statuses, groups and broadcasts"]},
+    business:{name:"Business",price:1499,year:14990,limits:{users:20,items:Infinity,msgs:10000},features:["E-invoice and e-way bill","Multiple shops and warehouses","API and webhooks","Priority support"]}
   };
-  const ADDONS={ai:{name:"AI assistant",price:149,per:"month"},broadcast:{name:"Extra broadcasts",price:0.2,per:"message"},esign:{name:"E-signature",price:25,per:"contract"}};
-  const FEES={upi:0,card:1.5,netbanking:1.5,protect:0.5};
+  const ADDONS={ai:{name:"AI replies pack",price:199,per:"1,000 replies"},broadcast:{name:"Extra broadcasts",price:0.15,per:"message"},seat:{name:"Extra team member",price:99,per:"month"},esign:{name:"E-signature",price:20,per:"contract"}};
+  /* BOC takes no cut of payments: buyers pay sellers directly through the seller's own gateway */
+  const FEES={upi:0,card:0,netbanking:0,protect:0};
   const ADPRICE={cpc:5,day:199};
 
   /* Admin-side records. Businesses mirror the app's BIZ keys. */
@@ -77,7 +79,16 @@
   const staff=[
     {name:"Priya",role:"Super admin"},{name:"Arun",role:"Super admin"},{name:"Imran",role:"Support agent"},{name:"Sneha",role:"Verification officer"},{name:"Vikram",role:"Finance"},{name:"Tanvi",role:"Marketing"}
   ];
+  /* reviews: only from verified purchases; every new review waits for BOC before it shows */
+  const reviews=[
+    {id:"RV-0301",biz:"st",pid:"p4",author:"Rohan Mehta",order:"ORD 0201",stars:5,text:"Dupattas exactly like the photos, well packed, arrived in 3 days.",status:"published",at:"20 Nov"},
+    {id:"RV-0298",biz:"st",pid:"p1",author:"Ananya R",order:"ORD 0172",stars:5,text:"The Kanjivaram is stunning. They sent a video before shipping.",status:"published",at:"14 Nov"},
+    {id:"RV-0290",biz:"st",pid:null,author:"Arjun Retail Pvt Ltd",order:"INV 0131",stars:4,text:"Reliable wholesale partner. Linen rolls were a day late this time.",status:"published",at:"2 Nov"},
+    {id:"RV-0310",biz:"ms",pid:null,author:"Kavya S",order:"ORD 0177",stars:2,text:"One of three packs was missing and the box was torn.",status:"pending",at:"Today"},
+    {id:"RV-0311",biz:"am",pid:null,author:"Meera Nair",order:"ORD 0187",stars:5,text:"Delivered in an hour, sealed strips, good expiry dates.",status:"published",at:"Mon"},
+    {id:"RV-0312",biz:"gs",pid:null,author:"Sneha P",order:"BKG 0119",stars:5,text:"Bridal trial was calm and on time. Booking in chat was easy.",status:"published",at:"Sun"}
+  ];
   const SEED={plans:PLANS,addons:ADDONS,fees:FEES,adprice:ADPRICE,
-    admin:{businesses,people,verifyQueue,tickets,disputes,ads,broadcasts,billing,coupons,moderation,legal,staff,audit:[],flags:{},escrow:{held:18500,paidOut:243600,fees:{payments:41200,subscriptions:28900,ads:6300,shipping:9800}}}};
+    admin:{reviews,businesses,people,verifyQueue,tickets,disputes,ads,broadcasts,billing,coupons,moderation,legal,staff,audit:[],flags:{},escrow:{held:18500,paidOut:243600,fees:{payments:41200,subscriptions:28900,ads:6300,shipping:9800}}}};
   window.BOCStore=BOCStore;window.SEED=SEED;
 })();

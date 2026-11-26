@@ -24,10 +24,10 @@ window.renderSheet=renderSheet=function(){const sh=S.sheet;
   return sheetWrap("Ask BOC",`<div class="aiqs">${QA.map((x,i)=>`<button class="${sh.i===i?"on":""}" data-act="aiask" data-i="${i}"><i></i>${esc(x.q)}</button>`).join("")}</div>
     ${ans?`<div class="aians" role="status"><div class="who"><i>${ic("spark","s")}</i>BOC assistant · from your own data</div><div class="big2 num">${ans.big}</div><p>${esc(ans.p)}</p></div>`:`<p class="muted" style="margin:12px 2px 0">Pick a question. Answers come from your chats, invoices and stock, never from outside.</p>`}`,
     ans&&ans.go?`<button class="btn" data-act="dopen" data-id="${ans.go}">Open ${code(ans.go)}</button>`:"")};
-act.aiask=e=>{const i=+e.dataset.i;S.sheet={type:"aiask",i};render()};
+act.aitoggle=()=>{S.aiOpen=!S.aiOpen;render()};act.aiask=e=>{const i=+e.dataset.i;S.sheet={type:"aiask",i};render()};
 
 /* ---------- header on tab roots: wordmark, AI button, avatar ---------- */
-const head=()=>`<div class="lx-top"><span class="wm"><i>B</i>BOC</span>${isBiz()?`<button class="ai" data-act="aiask" data-i="-1" aria-label="Ask BOC">${ic("spark","s")}</button>`:""}${av(isBiz()?"Shree Textiles":"Meera Nair",isBiz()?BIZ.st.color:PARTY[5],36)}</div>`;
+const head=()=>`<div class="lx-top"><span class="wm"><i>B</i>BOC</span>${isBiz()?`<button class="ai ${S.aiOpen?"on":""}" data-act="aitoggle" aria-label="${S.aiOpen?"Close":"Open"} AI search" aria-pressed="${!!S.aiOpen}">${ic(S.aiOpen?"close":"spark","s")}</button>`:""}${av(isBiz()?"Shree Textiles":"Meera Nair",isBiz()?BIZ.st.color:PARTY[5],36)}</div>`;
 const withHead=fn=>function(){let h=fn.apply(this,arguments);return h.replace(status(),status()+head())};
 window.chatList=chatList=withHead(chatList);
 window.pendingView=pendingView=withHead(pendingView);
@@ -37,7 +37,7 @@ window.ordersView=ordersView=withHead(ordersView);
 window.meView=meView=withHead(meView);
 
 /* ---------- AI bar on owner Chats, Pending and Business home ---------- */
-const withAi=fn=>function(){let h=fn.apply(this,arguments);if(!isBiz()||S.sheet)return h;
+const withAi=fn=>function(){let h=fn.apply(this,arguments);if(!isBiz()||!S.aiOpen)return h;
   return h.replace('<div class="body','<div class="has-ai body').replace(/(<nav class="nav")/,aibar()+"$1")};
 window.chatList=chatList=withAi(chatList);
 window.pendingView=pendingView=withAi(pendingView);
@@ -57,6 +57,6 @@ const _biz=bizView;
 window.bizView=bizView=function(){let h=_biz();const hl=healthOf();
   h=h.replace(/(<div class="dash-total"[\s\S]*?<\/div><\/div>)/,"$1"+incomeChart()).replace('<div class="grade">',`<div class="grade" style="--p:${Math.round(hl.score*10)}%">`).replace(/<div class="grade"([^>]*)>([^<]*)<\/div>/,'<div class="grade"$1><span>$2</span></div>');
   h=h.replace(status(),status()+head()).replace(/<button class="fc" data-act="go" data-s="assistant">[\s\S]*?<\/button>/,"");
-  return S.sheet?h:h.replace('<div class="body','<div class="has-ai body').replace(/(<nav class="nav")/,aibar()+"$1")};
+  return !S.aiOpen?h:h.replace('<div class="body','<div class="has-ai body').replace(/(<nav class="nav")/,aibar()+"$1")};
 render();
 })();

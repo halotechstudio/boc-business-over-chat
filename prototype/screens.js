@@ -36,8 +36,8 @@ screens.catalog=()=>{const cats=[...new Set(S.products.map(p=>p.cat))],cur=T("ca
 const orderRows=list=>list.map(d=>{const[t,l]=docState(d,"biz"),c=C(d.chat);return item({lead:av(c.name,c.color,40),t:esc(c.name),s:`${code(d.id)} · ${itemsOf(d).map(i=>i.p.name).join(", ")}`,v:money(docTotal(d)),vl:esc(l),tone:t,act:"dopen",id:d.id})}).join("");
 screens.orders=()=>{const all=Object.values(S.docs).filter(d=>d.kind==="order"&&!d.ext).reverse(),cur=T("ord")||"open";
   const sets={open:all.filter(d=>["placed","accepted"].includes(d.status)),moving:all.filter(d=>["shipped","delivered"].includes(d.status)),done:all.filter(d=>["completed","cancelled"].includes(d.status))};
-  const held=all.filter(d=>d.pay==="held").reduce((a,d)=>a+docTotal(d),0);
-  return page({title:"Orders",sub:`${all.length} orders`,hero:hero("Held by BOC Protect",money(held),"Paid out when each buyer confirms delivery"),
+  const held=all.filter(d=>d.pay==="held"||d.pay==="paid").reduce((a,d)=>a+docTotal(d),0);
+  return page({title:"Orders",sub:`${all.length} orders`,hero:hero("Collected online",money(held),"Straight into your bank through your own gateway"),
     tabs:tabs("ord",[["open","To accept or ship",sets.open.length],["moving","On the way",sets.moving.length],["done","Done",sets.done.length]],cur),
     body:sets[cur].length?group({open:"Needs you",moving:"Shipped",done:"Completed"}[cur],orderRows(sets[cur])):`<div class="pg-empty"><b>Nothing here</b><span>${cur==="open"?"New orders from chats land here first.":"Orders move here as they progress."}</span></div>`})};
 
@@ -49,7 +49,7 @@ screens.money=()=>{const d=Object.values(S.docs),rec=d.filter(x=>x.kind==="invoi
     :cur==="out"?group("Who you owe",pay.map(x=>{const c=C(x.chat);return item({lead:av(c.name,c.color,40),t:esc(c.name),s:code(x.id)+" · due "+esc(x.due),v:money(x.amount),act:"dopen",id:x.id})}).join(""),money(pay.reduce((a,x)=>a+x.amount,0)))
     :group("Expenses this month",S.expenses.map(x=>item({lead:ico("wallet"),t:esc(x.c),s:esc(x.d),v:money(x.a)})).join(""),money(exp));
   return page({title:"Money",sub:"Sales, payouts and the ledger",
-    hero:hero("Sales in November",money(S.months[5][1]),`${money(S.payout.held)} held · ${money(S.payout.settled)} paid to ${esc(S.payout.bank)}`,chart),
+    hero:hero("Sales in November",money(S.months[5][1]),`${money(S.payout.settled)} received in ${esc(S.payout.bank)}`,chart),
     tabs:tabs("mon",[["in","To collect",rec.length],["out","To pay",pay.length],["exp","Expenses",S.expenses.length]],cur),body,
     cta:cur==="exp"?`<button class="pg-btn" data-act="addexp">Add an expense${ic("chevr","s")}</button>`:""})};
 
@@ -85,7 +85,7 @@ screens.plan=()=>{const cur=planOf("st"),p=SEED.plans[cur],f=SEED.fees;
   return page({title:"Plan and billing",sub:"Example pricing",hero:hero("Your plan",`${p.name} <small>${money(p.price)}/month</small>`,`${p.limits.users} users · ${p.limits.items===Infinity?"unlimited":p.limits.items} products · ${p.limits.msgs.toLocaleString("en-IN")} broadcast messages`),
     body:group("Plans",Object.entries(SEED.plans).map(([k,x])=>item({lead:ico(k===cur?"check":"card",k===cur?"mint":""),t:x.name,s:`${x.limits.users} users · ${x.limits.items===Infinity?"unlimited":x.limits.items} products`,v:money(x.price),vl:k===cur?"Current":"per month",tone:k===cur?"good":"",act:k===cur?"":"planset",data:`data-v="${k}"`})).join(""))+
       group("Add-ons",Object.values(SEED.addons).map(a=>item({lead:ico("plus"),t:a.name,v:money(a.price),vl:"a "+a.per})).join(""))+
-      group("Payment fees",[["UPI",f.upi+"%"],["Cards and net banking",f.card+"%"],["BOC Protect, seller pays","+"+f.protect+"%"]].map(([t,v])=>item({t,v})).join("")),
+      group("Payment fees",[["UPI",f.upi+"%"],["Cards and net banking",f.card+"%"]].map(([t,v])=>item({t,v})).join("")),
     cta:`<button class="pg-btn" data-act="promote">Promote your shop${ic("chevr","s")}</button>`})};
 screens.credit=()=>{const rows=Object.entries(S.buyers).map(([cid,b])=>{const c=C(cid),od=Object.values(S.docs).filter(d=>d.kind==="invoice"&&d.chat===cid&&d.status!=="paid"&&d.dueTs&&d.dueTs<Date.now()).length;
     return item({lead:av(c.name,c.color,40),t:esc(c.name),s:`${b.terms} · ${({distributor:"Distributor",retailer:"Retailer",public:"Public"})[b.list]} prices`,v:money(b.used),vl:od?od+" overdue":"of "+money(b.limit),tone:od?"bad":"",act:"go",data:`data-s="contact" data-id="${cid}"`})}).join("");
@@ -110,14 +110,14 @@ window.ordersView=ordersView=function(){const os=Object.values(S.docs).filter(d=
     const amt=d.kind==="order"?docTotal(d):d.kind==="ms"?d.total:d.kind==="sub"?d.log.length*d.rate:d.price||d.amount||0;
     return item({lead:av(b.name,b.color,40),t:esc(b.name),s:`${esc(what)}`,v:money(amt),vl:esc(l),tone:t,act:"dopen",id:d.id})};
   const spent=os.filter(d=>d.kind==="order").reduce((a,d)=>a+docTotal(d),0);
-  return page({title:"Your orders",back:false,tab:true,hero:hero("Spent through BOC",money(spent),"Protected by BOC Protect until you confirm delivery"),
+  return page({title:"Your orders",back:false,tab:true,hero:hero("Spent through BOC",money(spent),"Paid directly to each business"),
     body:os.length?group("In progress",open.map(row).join(""),open.length+"")+group("Completed",done.map(row).join("")):`<div class="pg-empty"><b>No orders yet</b><span>Explore businesses to start.</span></div>`})};
 
 /* ---------- customer: You ---------- */
 window.meView=meView=function(){
   return page({title:"You",back:false,tab:true,
     body:`<div class="pg-me">${av("Meera Nair",PARTY[5],64)}<div><b>Meera Nair</b><span>Personal account · Kochi</span></div></div>`+
-      group("Account",[item({lead:ico("phone"),t:"Phone",s:"+91 98•••••432",vl:"Verified",tone:"good"}),item({lead:ico("pin"),t:"Delivery address",s:"14 Marine Drive, Kochi 682031"}),item({lead:ico("card"),t:"Saved payment",s:"UPI · meera@okbank"}),item({lead:ico("shield"),t:"BOC Protect",s:"Your money is held until you confirm delivery",vl:"On",tone:"good"})].join(""))+
+      group("Account",[item({lead:ico("phone"),t:"Phone",s:"+91 98•••••432",vl:"Verified",tone:"good"}),item({lead:ico("pin"),t:"Delivery address",s:"14 Marine Drive, Kochi 682031"}),item({lead:ico("card"),t:"Saved payment",s:"UPI · meera@okbank"}),item({lead:ico("shield"),t:"Payments",s:"You pay each business directly. Pay only through links in the chat",vl:"Direct",tone:"good"})].join(""))+
       `<section class="pg-g"><div class="pg-gh"><h2>Personal vs business</h2></div><p class="pg-p">Personal accounts chat, shop, pay and sign. Only registered businesses can sell or send invoices, and every business shows its verification before you buy.</p></section>`,
     cta:`<button class="pg-btn ghost" data-act="startbiz">Register a business${ic("chevr","s")}</button>`})};
 
@@ -135,7 +135,7 @@ screens.shop=v=>{const b=BIZ[v.id],ps=v.id==="st"?S.products.filter(p=>p.vis==="
   const svc=(SERVICES[v.id]||[]).map(s=>item({lead:ico("clock"),t:esc(s.name),s:s.dur,v:money(s.price)})).join("")+(RENTALS[v.id]||[]).map(s=>item({lead:ico("store"),t:esc(s.name),v:money(s.rate),vl:"a day"})).join("")+(SUBPLANS[v.id]||[]).map(s=>item({lead:ico("box"),t:esc(s.name),v:money(s.rate),vl:"a day"})).join("");
   return page({title:"Catalog",sub:esc(b.name),body:(ps.length?`<div class="pg-grid">${ps.map(p=>`<button class="pg-card" data-act="pdetail" data-id="${p.id}"><span class="pg-ph" style="background:${p.color}"><span>${p.code}</span></span><b>${esc(p.name)}</b><span class="num">${money(p.price)}</span></button>`).join("")}</div>`:"")+group("Offered",svc)+(!ps.length&&!svc?`<div class="pg-empty"><b>Catalog coming soon</b><span>Message the business to ask what they have.</span></div>`:"")})};
 screens.pdetail=v=>{const p=P(v.id),buyer=!isBiz();
-  return page({title:esc(p.name),sub:BIZ.st.name,hero:`<div class="pg-photo" style="background:${p.color}"><span>${p.code}</span><small>Photo shown as a colour block in this prototype</small></div>`+hero(buyer?"Price":"Retail price",money(p.price),buyer?"GST extra · BOC Protect on every order":`Wholesale ${money(p.whole)} · cost ${money(p.cost)}`),
+  return page({title:esc(p.name),sub:BIZ.st.name,hero:`<div class="pg-photo" style="background:${p.color}"><span>${p.code}</span><small>Photo shown as a colour block in this prototype</small></div>`+hero(buyer?"Price":"Retail price",money(p.price),buyer?"GST extra · you pay the business directly":`Wholesale ${money(p.whole)} · cost ${money(p.cost)}`),
     body:group("Details",[item({t:"Options",s:p.vars.map(esc).join(" · ")}),item({t:"Stock",s:`${p.stock} ${p.unit} available`,vl:p.stock<=p.reorder?"Low":"",tone:"bad"}),item({t:"About",s:esc(p.desc)}),item({t:"HSN",s:p.hsn})].join("")),
     cta:buyer?`<button class="pg-btn" data-act="cporder" data-id="${p.id}">Order · ${money(p.price)}${ic("chevr","s")}</button>`:""})};
 /* ---------- round 6: assistant, auto-replies, quick replies, broadcasts, directory, verification ---------- */

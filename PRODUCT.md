@@ -56,3 +56,8 @@ The conversation is the business record. Unlike WhatsApp Business (chat plus a c
 3. Show what is waiting: anything needing the owner surfaces in Pending without hunting.
 4. Built for a busy phone user: one-handed, interruptible, fast to scan.
 5. Indian business reality first: GST, UPI, khata, credit terms are native, not bolted on.
+
+
+## Payments model (decided 2026-11-26)
+
+BOC does not hold money or sit between buyer and seller. Buyers pay the business directly through the business's own UPI ID or payment gateway (Razorpay, Cashfree, PhonePe PG, Paytm, PayU), connected under Connections. BOC takes no cut of sales. Complaints are mediated by BOC; refunds come from the seller. Revenue comes from plans (Free, Starter ₹199, Growth ₹599, Business ₹1,499 a month; yearly = 10 months), add-ons (AI replies, broadcasts, seats, e-sign), ads in Explore and search, and referral revenue from partners a business chooses to connect.

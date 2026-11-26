@@ -305,6 +305,7 @@ svg.i.s{width:16px;height:16px}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="calm.css">
 <link rel="stylesheet" href="ledger.css">
+<link rel="stylesheet" href="chatkit.css">
 
 <div class="wrap">
   <aside class="guide">
@@ -371,7 +372,7 @@ const S={
   ai:{mode:"auto",know:{catalog:true,stock:true,hours:true,policy:true,faq:true},perm:{prices:true,cards:true,drafts:true,paylink:false},limit:25000,answered:14,handed:3},
   greetingText:"Welcome to Shree Textiles! Ask about any saree or fabric, or tap Catalog to browse.",
   awayText:"We are closed right now. We open at 10 am and will reply first thing.",
-  quick:[{k:"/hours",t:"We are open Mon–Sat, 10 am to 7 pm."},{k:"/thanks",t:"Thank you for your order! Tracking comes here as soon as it ships."},{k:"/pay",t:"You can pay from the invoice above by UPI or card. BOC holds it safely until delivery."},{k:"/moq",t:"Wholesale minimum is 5 rolls per fabric or 10 pieces per garment."}],
+  quick:[{k:"/hours",t:"We are open Mon–Sat, 10 am to 7 pm."},{k:"/thanks",t:"Thank you for your order! Tracking comes here as soon as it ships."},{k:"/pay",t:"You can pay from the invoice above by UPI or card. It comes straight to our account."},{k:"/moq",t:"Wholesale minimum is 5 rolls per fabric or 10 pieces per garment."}],
   expenses:[{c:"Rent",a:45000,d:"1 Nov"},{c:"Salaries",a:118000,d:"1 Nov"},{c:"Transport",a:6400,d:"12 Nov"}],
   months:[["Jun",612000],["Jul",574000],["Aug",698000],["Sep",742000],["Oct",913000],["Nov",486000]],
   campaigns:[{name:"Festive silk preview",aud:"All customers",sent:214,read:171,click:48,orders:9,done:true}],
@@ -492,7 +493,7 @@ function productCard(p,c){const b2b=c&&c.kind==="b2b";const pr=b2b?p.whole:p.pri
   (side()==="cp"?`<div class="acts">${A("cporder",p.id,"Order","pri")}${A("pdetail",p.id,"Details")}</div>`:"")}
 function cardHTML(m,c){
   if(m.type==="product")return productCard(P(m.pid),c);
-  if(m.type==="payment")return `<div class="ch t-good"><span class="code">${code(m.ref)}</span><small>${m.dir==="out"?"Payment sent":"Payment received"}</small></div><div class="cd"><div class="ttl num">${money(m.amount)}</div><div class="meta">${esc(m.how)}${m.held?" · held by BOC Protect until delivery":""}</div></div>`;
+  if(m.type==="payment")return `<div class="ch t-good"><span class="code">${code(m.ref)}</span><small>${m.dir==="out"?"Payment sent":"Payment received"}</small></div><div class="cd"><div class="ttl num">${money(m.amount)}</div><div class="meta">${esc(m.how)}${m.held?" · paid straight to the seller":""}</div></div>`;
   if(m.type==="rate")return `<div class="ch t-wait"><span class="code">${code(m.ref)}</span><small>Rate this order</small></div><div class="cd">${side()==="cp"&&!D(m.ref).rated?`<div class="k">How was your order from ${esc(BIZ[c.biz].name)}?</div><div class="stars">${[1,2,3,4,5].map(n=>`<button data-act="rate" data-id="${m.ref}" data-n="${n}" aria-label="${n} stars">${ic("star")}</button>`).join("")}</div>`:`<div class="k">${D(m.ref).rated?`Rated ${D(m.ref).rated} out of 5`:"Waiting for the customer's rating"}</div>`}</div>`;
   const d=D(m.ref);if(!d)return"";
   const [tone,label]=docState(d),me=side();
@@ -507,7 +508,7 @@ function cardHTML(m,c){
       break;
     case "order":{
       const st=d.ship?d.ship.stage:-1;
-      body=lines(d)+`<div class="meta">${d.pay==="held"?"Paid "+money(docTotal(d))+" · held by BOC Protect":d.pay==="cod"?"Pay on delivery":d.pay==="released"?"Payment released to seller":"Unpaid"}</div>`+
+      body=lines(d)+`<div class="meta">${d.pay==="held"?"Paid "+money(docTotal(d))+" · paid straight to the seller":d.pay==="cod"?"Pay on delivery":d.pay==="released"?"Paid to seller":"Unpaid"}</div>`+
         (d.ship?`<div class="track">${STAGES.map((s,i)=>`<i class="${i<=st?"on":""}"></i>`).join("")}</div><div class="meta">${esc(d.ship.courier)} · AWB <span class="num">${d.ship.awb}</span></div>`:"");
       if(d.ext)break;
       if(me==="biz"){
@@ -588,7 +589,7 @@ function chatView(v){
   const sub=S.typing[c.id]?"typing…":isBiz()?[c.acct,c.assignee?"handled by "+c.assignee:null].filter(Boolean).join(" · "):(verified(b)?"Verified business · "+b.reply.replace("Usually ",""):"Not verified");
   const openDocs=Object.values(S.docs).filter(d=>(d.chat===c.id||(d.kind==="rfq"&&d.suppliers.includes(c.id)))&&!["mute"].includes(docState(d)[0])&&!(docState(d)[0]==="good"&&d.status!=="delivered")).slice(-6);
   const strip=openDocs.length?`<div class="hstrip">${openDocs.map(d=>{const[t,l]=docState(d);return `<button class="chip t-${t}" data-act="jump" data-id="${d.id}"><span class="code">${code(d.id)}</span><small>${esc(l)}</small></button>`}).join("")}</div>`:"";
-  const banner=!isBiz()?(verified(b)?`<button class="banner ok" data-act="bizprofile" data-id="${c.biz}">${ic("shield")}<span><b>${esc(b.name)} is a verified business</b>${b.lv.gst?"GST verified":"Udyam registered"} · on BOC since ${b.since} · ${b.rating}★ from ${b.reviews} reviews. Tap to see details.</span></button>`:`<button class="banner warn" data-act="bizprofile" data-id="${c.biz}">${ic("alert")}<span><b>Not a verified business</b>Only the phone number is verified. Never pay outside BOC, and use BOC Protect so your money is held until delivery.</span></button>`):"";
+  const banner=!isBiz()?(verified(b)?`<button class="banner ok" data-act="bizprofile" data-id="${c.biz}">${ic("shield")}<span><b>${esc(b.name)} is a verified business</b>${b.lv.gst?"GST verified":"Udyam registered"} · on BOC since ${b.since} · ${b.rating}★ from ${b.reviews} reviews. Tap to see details.</span></button>`:`<button class="banner warn" data-act="bizprofile" data-id="${c.biz}">${ic("alert")}<span><b>Not a verified business</b>Only the phone number is verified. Pay only through payment links in this chat, never to a personal UPI number.</span></button>`):"";
   const seenDoc=new Set();
   const msgs=c.msgs.map(m=>{
     if(m.by==="sys"&&m.type!=="rate")return `<div class="sys">${esc(m.text)}</div>`;
@@ -631,7 +632,7 @@ function bizView(){
   const d=Object.values(S.docs);
   return status()+big("Business")+`<div class="body"><div class="sec"><div class="grid2">
   <div class="tile"><div class="l">Sales in November</div><div class="v num">${money(S.months[5][1])}</div></div>
-  <div class="tile"><div class="l">Held by BOC Protect</div><div class="v num">${money(S.payout.held)}</div></div>
+  <div class="tile"><div class="l">Collected online</div><div class="v num">${money(S.payout.held)}</div></div>
   <div class="tile"><div class="l">Open orders</div><div class="v num">${d.filter(x=>x.kind==="order"&&!x.ext&&!["completed","cancelled"].includes(x.status)).length}</div></div>
   <div class="tile"><div class="l">Rating</div><div class="v num">${BIZ.st.rating} <span style="font-size:13px;color:var(--ink2)">(${BIZ.st.reviews})</span></div></div></div></div>
   <div class="sec"><div class="grid4" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">${t("catalog","tag","#7B1E3A","Products")}${t("orders","box","#2B3A8C","Orders")}${t("money","wallet","#2E7D4F","Money")}${t("customers","users","#0F7C86","Customers")}${t("purchases","cart","#9A6B12","Purchases")}${t("contracts","pen","#5B3A8C","Contracts")}${t("assistant","spark","#2B3A8C","AI assistant")}${t("broadcast","mega","#C0562A","Broadcasts")}${t("team","users","#4A5D23","Team")}</div></div>
@@ -652,7 +653,7 @@ function ordersView(){
   return status()+big("Your orders")+`<div class="body"><div class="sec">${os.map(d=>{const[t,l]=docState(d,"cp");const b=BIZ[C(d.chat).biz];return `<button class="item" data-act="opendoc" data-id="${d.id}"><div class="mini t-${t}"><span class="code" style="font-size:12px">ORD</span></div><div class="mid"><div class="t">${esc(b.name)}</div><div class="s">${itemsOf(d).map(i=>i.p.name).join(", ")} · ${money(docTotal(d))}</div></div><span class="tag tg-${t}">${esc(l)}</span></button>`}).join("")||`<div class="empty">No orders yet. Explore businesses to start.</div>`}</div></div>`+nav()}
 function meView(){
   return status()+big("You")+`<div class="body"><div class="sec" style="display:flex;gap:12px;align-items:center">${av("Meera Nair",PARTY[5],56)}<div><b style="font-size:17px">Meera Nair</b><div class="s" style="color:var(--ink2);font-size:13px">Personal account · +91 98•••••432</div></div></div>
-  <div class="sec"><div class="kv"><span>Phone</span><span class="tag tg-good">Verified</span></div><div class="kv"><span>Delivery address</span><span>14 Marine Drive, Kochi 682031</span></div><div class="kv"><span>Saved payment</span><span>UPI · meera@okbank</span></div><div class="kv"><span>BOC Protect</span><span>On for every order</span></div></div>
+  <div class="sec"><div class="kv"><span>Phone</span><span class="tag tg-good">Verified</span></div><div class="kv"><span>Delivery address</span><span>14 Marine Drive, Kochi 682031</span></div><div class="kv"><span>Saved payment</span><span>UPI · meera@okbank</span></div><div class="kv"><span>Payments</span><span>Straight to each business</span></div></div>
   <div class="sec"><h4>Personal vs business</h4><p style="margin:0 0 12px;color:var(--ink2);font-size:13px">Personal accounts chat, shop, pay and sign. Only registered businesses can sell, send invoices or take payments, and every business shows its verification to you before you buy.</p><button class="btn full tonal" data-act="startbiz">${ic("store")}Register a business</button></div></div>`+nav()}
 
 /* ===== shared screens ===== */
@@ -665,7 +666,7 @@ const screens={
     ${ok?"":`<div class="sec" style="padding-bottom:0"><div class="banner warn" style="margin:0;width:100%">${ic("alert")}<span><b>Be careful with this business</b>It joined ${b.since} and has not verified its GST or bank account. Pay only through BOC so your money is protected.</span></div></div>`}
     <div class="sec"><div class="grid2"><div class="tile"><div class="l">Rating</div><div class="v num">${b.rating?b.rating+"★":"None"}</div><div class="l">${b.reviews} reviews</div></div><div class="tile"><div class="l">Completed orders</div><div class="v num">${b.orders.toLocaleString("en-IN")}</div><div class="l">On BOC since ${b.since}</div></div></div></div>
     <div class="sec"><h4>Verification</h4>${verRows(b)}</div>
-    <div class="sec"><h4>How they work</h4><div class="kv"><span>Replies</span><span>${esc(b.reply)}</span></div><div class="kv"><span>Hours</span><span>${esc(b.hours||"Not shared")}</span></div><div class="kv"><span>Delivery</span><span>${esc(b.ships||"Not shared")}</span></div><div class="kv"><span>Returns</span><span>${esc(b.returns||"Not shared")}</span></div><div class="kv"><span>Disputes</span><span>${esc(b.disputes||"No history")}</span></div><div class="kv"><span>Payment</span><span>BOC Protect: money held until you confirm delivery</span></div></div>
+    <div class="sec"><h4>How they work</h4><div class="kv"><span>Replies</span><span>${esc(b.reply)}</span></div><div class="kv"><span>Hours</span><span>${esc(b.hours||"Not shared")}</span></div><div class="kv"><span>Delivery</span><span>${esc(b.ships||"Not shared")}</span></div><div class="kv"><span>Returns</span><span>${esc(b.returns||"Not shared")}</span></div><div class="kv"><span>Disputes</span><span>${esc(b.disputes||"No history")}</span></div><div class="kv"><span>Payment</span><span>Straight to the business by UPI or card</span></div></div>
     ${reviews.length?`<div class="sec"><h4>Recent reviews</h4>${reviews.map(r=>`<div class="item" style="display:block"><div class="t">${r[0]} · ${r[1]}★</div><div class="s">${r[2]}</div></div>`).join("")}</div>`:""}
     ${my?`<div class="sec"><button class="btn full tonal" data-act="go" data-s="verification">Manage verification</button></div>`:`<div class="sec" style="display:flex;gap:10px"><button class="btn" style="flex:1" data-act="shop" data-id="${v.id}">${ic("bag","s")}Catalog</button><button class="btn tonal" style="flex:1" data-act="cpchat" data-id="${v.id}">${ic("chat","s")}Message</button></div><div class="sec" style="padding-top:0"><button class="btn out full" data-act="report">Report this business</button></div>`}</div>`},
   shop:v=>{const b=BIZ[v.id];const ps=v.id==="st"?S.products.filter(p=>p.vis==="Everyone"):[];
@@ -693,7 +694,7 @@ const screens={
   money:()=>{const d=Object.values(S.docs),rec=d.filter(x=>x.kind==="invoice"&&x.status==="unpaid"),pay=d.filter(x=>x.kind==="bill"&&x.status==="unpaid"),max=Math.max(...S.months.map(m=>m[1]));
     const parties=S.chats.filter(c=>c.kind!=="team"&&!c.custOnly).map(c=>({c,r:rec.filter(x=>x.chat===c.id).reduce((a,x)=>a+docTotal(x),0),p:pay.filter(x=>x.chat===c.id).reduce((a,x)=>a+x.amount,0)})).filter(x=>x.r||x.p);
     return status()+hdr("Money",{sub:"Payouts, ledger and expenses"})+`<div class="body">
-    <div class="sec"><h4>Payouts</h4><div class="grid2"><div class="tile"><div class="l">Held by BOC Protect</div><div class="v num">${money(S.payout.held)}</div><div class="l">Released when buyers confirm delivery</div></div><div class="tile"><div class="l">Paid out this month</div><div class="v num">${money(S.payout.settled)}</div><div class="l">To ${S.payout.bank}, next working day</div></div></div></div>
+    <div class="sec"><h4>Payouts</h4><div class="grid2"><div class="tile"><div class="l">Collected online</div><div class="v num">${money(S.payout.held)}</div><div class="l">Released when buyers confirm delivery</div></div><div class="tile"><div class="l">Paid out this month</div><div class="v num">${money(S.payout.settled)}</div><div class="l">To ${S.payout.bank}, next working day</div></div></div></div>
     <div class="sec"><h4>Sales, last 6 months</h4><div class="bars">${S.months.map((m,i)=>`<div class="${i===5?"cur":""}"><small>${(m[1]/100000).toFixed(1)}L</small><span style="height:${Math.round(m[1]/max*84)}px"></span></div>`).join("")}</div><div class="blab">${S.months.map(m=>`<small>${m[0]}</small>`).join("")}</div></div>
     <div class="sec"><h4>Party balances (khata)</h4>${parties.map(x=>`<button class="item" data-act="open" data-id="${x.c.id}">${av(x.c.name,x.c.color,36)}<div class="mid"><div class="t">${esc(x.c.name)}</div><div class="s">${x.r?"Owes you":"You owe"}</div></div><span class="num" style="font-weight:700;color:var(${x.r?"--good":"--bad"})">${money(x.r||x.p)}</span></button>`).join("")||`<div class="empty">All settled.</div>`}</div>
     <div class="sec"><h4>Expenses <button class="btn sm tonal" data-act="addexp">Add</button></h4>${S.expenses.slice().reverse().map(e=>`<div class="kv"><span>${e.c} · ${e.d}</span><span class="num">${money(e.a)}</span></div>`).join("")}</div></div>`},
@@ -750,13 +751,13 @@ function obScreen(v){const o=S.ob;const step=v.step;
       <button class="fc" data-act="obnogst" style="margin-bottom:18px">${o.noGst?"I have a GSTIN":"I don't have GST"}</button>
       <div class="lab" style="margin-top:0">Owner identity</div>
       ${o.kycOk?`<div class="fetched"><b>Identity verified</b>Aadhaar e-KYC · name matches the business records</div>`:`<button class="btn tonal full" data-act="obverify" data-k="kycOk">Verify with Aadhaar OTP</button><p class="meta">BOC stores the verification result, not your Aadhaar number.</p>`}</div>`+foot("Continue","ob\" data-s=\"b3",!(o.gstOk&&o.kycOk));
-    case "b3": return status()+back+prog(3)+`<div class="body ob"><h1>Where should money go?</h1><p class="lead">Customer payments are held by BOC Protect until delivery, then paid to this account the next working day.</p>${fld("acct","Bank account number")}${fld("ifsc","IFSC")}
+    case "b3": return status()+back+prog(3)+`<div class="body ob"><h1>Where should money go?</h1><p class="lead">Customer payments go straight into this account through your own payment gateway. BOC never holds your money.</p>${fld("acct","Bank account number")}${fld("ifsc","IFSC")}
       ${o.bankOk?`<div class="fetched"><b>Account verified</b>₹1 deposit confirmed · account holder SHREE TEXTILES matches your GST name</div>`:`<button class="btn tonal full" data-act="obverify" data-k="bankOk" style="margin:-4px 0 14px">Verify with a ₹1 deposit</button>`}
       ${fld("upi","UPI ID for quick payments","Optional")}</div>`+foot("Continue","ob\" data-s=\"b4",!o.bankOk);
     case "b4": return status()+back+prog(4)+`<div class="body ob"><h1>Set up your shop</h1><p class="lead">Couriers pick up from here, and customers see your hours.</p>${fld("addr","Pickup address")}${fld("hours","Business hours")}
       <div class="lab">Your colour</div><p class="meta" style="margin-top:-4px">Your chats, cards and profile wear this colour so customers recognise you.</p><div class="wchips">${["#7A2E5C","#0F7C86","#C0562A","#4A5D23","#5B3A8C","#9A6B12"].map(x=>`<button class="mini" style="background:${x};${o.color===x?"outline:3px solid var(--ink);outline-offset:2px":""}" data-act="obset" data-k="color" data-v="${x}" aria-label="Colour ${x}"></button>`).join("")}</div>
       <div class="lab">Your first product</div><button class="opt" data-act="obset" data-k="addFirst" data-v="1"><span class="mini" style="background:var(--sunk);color:var(--ink2)">${ic("camera")}</span><div class="mid"><b>Add products now or later</b><span>Take a photo and describe it in one line. The assistant fills in price, options and tax code.</span></div></button></div>`+foot("Finish","obdone\" data-v=\"business");
-    case "done": return status()+`<div class="body ob"><div class="done"><div class="ok">${ic("check")}</div><h1>${o.type==="business"?esc(o.bizName)+" is verified":"You're all set"}</h1><p class="lead">${o.type==="business"?"Customers now see the verified badge on your chats and profile. The demo continues with Shree Textiles' example data.":"Explore verified businesses, chat, and pay with BOC Protect. The demo continues as Meera."}</p></div>
+    case "done": return status()+`<div class="body ob"><div class="done"><div class="ok">${ic("check")}</div><h1>${o.type==="business"?esc(o.bizName)+" is verified":"You're all set"}</h1><p class="lead">${o.type==="business"?"Customers now see the verified badge on your chats and profile. The demo continues with Shree Textiles' example data.":"Explore verified businesses, chat, and pay businesses directly. The demo continues as Meera."}</p></div>
       ${o.type==="business"?`<div class="sec" style="padding:0">${verRows({lv:{phone:1,gst:!o.noGst,udyam:o.noGst,kyc:1,bank:1},gstin:o.gstin,legal:"SHREE TEXTILES",udyam:o.udyam})}</div>`:""}</div>`+foot(o.type==="business"?"Open my business":"Start exploring","obfinish");
   }}
 
@@ -792,7 +793,7 @@ function renderSheet(){const sh=S.sheet,c=sh.chat?C(sh.chat):null;
       return sheetWrap("Order from "+BIZ.st.name,`<div class="item" style="border:0"><div class="mini" style="background:${p.color}"><span class="code" style="font-size:11px">${p.code}</span></div><div class="mid"><div class="t">${esc(p.name)}</div><div class="s num">${money(p.price)}</div></div><div class="step"><button data-act="oqty" data-d="-1" aria-label="Fewer">−</button><b>${sh.qty}</b><button data-act="oqty" data-d="1" aria-label="More">+</button></div></div>
         ${chipset("v",p.vars,"Option")}<div class="lab">Deliver to</div><div class="opt on"><span class="mini" style="background:var(--tint-soft);color:var(--tint)">${ic("pin")}</span><div class="mid"><b>Meera Nair</b><span>14 Marine Drive, Kochi 682031</span></div></div>
         <div class="lab">Delivery</div>${[["std","Standard · 4–5 days",78],["exp","Express · 2 days",142]].map(([k,l,f])=>`<button class="opt ${sh.ship===k?"on":""}" data-act="sset" data-k="ship" data-v="${k}"><div class="mid"><b>${l}</b></div><span class="num">${money(f)}</span></button>`).join("")}
-        <div class="lab">Pay</div>${[["upi","UPI","Pay now · held until you confirm delivery"],["card","Card","Pay now · held until you confirm delivery"],["cod","Pay on delivery","Cash or UPI to the courier"]].map(([k,l,s])=>`<button class="opt ${sh.pay===k?"on":""}" data-act="sset" data-k="pay" data-v="${k}"><div class="mid"><b>${l}</b><span>${s}</span></div></button>`).join("")}
+        <div class="lab">Pay</div>${[["upi","UPI","Pay now · straight to the seller's account"],["card","Card","Pay now · straight to the seller's account"],["cod","Pay on delivery","Cash or UPI to the courier"]].map(([k,l,s])=>`<button class="opt ${sh.pay===k?"on":""}" data-act="sset" data-k="pay" data-v="${k}"><div class="mid"><b>${l}</b><span>${s}</span></div></button>`).join("")}
         <div class="tot">${[["Item",t.sub],["GST 5%",t.tax],["Delivery",t.ship]].map(x=>`<div class="li"><span>${x[0]}</span><span class="num">${money(x[1])}</span></div>`).join("")}<div class="li"><span>Total</span><span class="num">${money(t.total)}</span></div></div>`,
         `<button class="btn" data-act="placeorder">${sh.pay==="cod"?"Place order":"Pay "+money(t.total)}</button>`)}
     case "paying": return sheetWrap("Paying "+money(sh.amount),`<div class="done"><div class="ok">${ic("lock")}</div><p class="meta">Confirming with your UPI app. BOC will hold this money until you confirm delivery.</p></div>`);
@@ -804,7 +805,7 @@ function renderSheet(){const sh=S.sheet,c=sh.chat?C(sh.chat):null;
         ${chipset("wt",["0.5 kg","1 kg","2 kg","5 kg"],"Package weight")}<div class="lab">Courier</div>${COURIERS.map(x=>`<button class="opt ${sh.courier===x.id?"on":""}" data-act="sset" data-k="courier" data-v="${x.id}"><span class="mini" style="background:var(--sunk);color:var(--ink2)">${ic("truck")}</span><div class="mid"><b>${x.name}</b><span>${x.eta}</span></div><span class="num">${x.fee?money(x.fee):"Free"}</span></button>`).join("")}
         ${chipset("slot",["Today 4–7 pm","Tomorrow 10 am–1 pm"],"Pickup")}<p class="meta">Pickup from 42 Town Hall Road, Coimbatore. The label appears in the chat after booking.</p>`,`<button class="btn" data-act="doship">Book ${cr.id==="self"?"self delivery":"pickup"}</button>`)}
     case "track":{const o=D(sh.order),s=o.ship;return sheetWrap("Tracking "+code(o.id),`<div class="kv"><span>Courier</span><span>${esc(s.courier)}</span></div><div class="kv"><span>AWB</span><span class="num">${s.awb}</span></div><div class="timeline" style="margin-top:14px">${STAGES.map((x,i)=>`<div class="${i<=s.stage?"on":""}"><i></i><span><b>${x}</b><span>${i<=s.stage?(s.times[i]||""):i===4?"Expected "+s.eta:""}</span></span></div>`).join("")}</div>`)}
-    case "issue": return sheetWrap("Report a problem",`<p class="meta" style="margin-top:0">Your payment stays held while this is sorted out.</p>${["Item damaged","Wrong item","Item missing","Not as described"].map(x=>`<button class="opt" data-act="doissue" data-id="${sh.order}" data-v="${x}"><div class="mid"><b>${x}</b></div></button>`).join("")}`);
+    case "issue": return sheetWrap("Report a problem",`<p class="meta" style="margin-top:0">BOC tells the business now. Refunds come from the business; BOC steps in if they don't reply in 48 hours.</p>${["Item damaged","Wrong item","Item missing","Not as described"].map(x=>`<button class="opt" data-act="doissue" data-id="${sh.order}" data-v="${x}"><div class="mid"><b>${x}</b></div></button>`).join("")}`);
   }
 }
 
@@ -817,7 +818,7 @@ function placeOrder(cid,items,payMethod,shipFee){const o=addDoc({id:nid("ORD"),k
   post(cid,"cp",{type:"doc",ref:o.id});if(o.pay==="held"){S.payout.held+=docTotal(o);post(cid,"cp",{type:"payment",amount:docTotal(o),ref:o.id,how:o.method,dir:"in",held:true})}
   if(!isBiz())sim(cid,1300,()=>{bizAccept(o);sim(cid,1500,()=>bizShip(o,{courier:"std",wt:"1 kg",slot:"Today 4–7 pm"}))});return o}
 function bizAccept(o){o.status="accepted";o.items.forEach(i=>{const p=P(i.pid);if(p)p.stock-=i.qty});
-  const inv=addDoc({id:nid("INV"),kind:"invoice",chat:o.chat,items:o.items,disc:0,shipFee:o.shipFee,terms:"Order",due:"on receipt",status:o.pay==="held"?"paid":"unpaid",paidHow:o.pay==="held"?o.method+" (held until delivery)":null});o.invoice=inv.id;
+  const inv=addDoc({id:nid("INV"),kind:"invoice",chat:o.chat,items:o.items,disc:0,shipFee:o.shipFee,terms:"Order",due:"on receipt",status:o.pay==="held"?"paid":"unpaid",paidHow:o.pay==="held"?o.method+" (paid to seller)":null});o.invoice=inv.id;
   post(o.chat,"biz",{type:"doc",ref:inv.id,from:isBiz()?null:"Ravi"});post(o.chat,"biz",{type:"text",text:"Thank you! Your order is confirmed and we are packing it today.",from:isBiz()?null:"Ravi"})}
 function bizShip(o,opt){const cr=COURIERS.find(x=>x.id===opt.courier);o.status="shipped";o.ship={courier:cr.name,awb:cr.id==="self"?"SELF-"+o.id.slice(4):String(Math.floor(1e11+Math.random()*9e11)),stage:1,eta:dayPlus(cr.id==="exp"?2:4),times:[now(),now()]};
   post(o.chat,"sys",{type:"sys",text:`${code(o.id)} picked up by ${cr.name}`});
@@ -826,12 +827,12 @@ function bizShip(o,opt){const cr=COURIERS.find(x=>x.id===opt.courier);o.status="
       if(isBiz())sim(o.chat,1200,()=>{cpConfirm(o);setTimeout(()=>{o.rated=5;BIZ.st.reviews++;post(o.chat,"cp","Rated 5 stars: Beautiful saree, exactly like the photo!");render()},900)})}
     render()},1400*(i+1)))}
 function cpConfirm(o){o.status="completed";if(o.pay==="held"){o.pay="released";const amt=docTotal(o);S.payout.held-=amt;S.payout.settled+=amt;S.months[5][1]+=amt}
-  post(o.chat,"sys",{type:"sys",text:`Delivery confirmed. ${money(docTotal(o))} released to ${BIZ.st.name}.`});post(o.chat,"sys",{type:"rate",ref:o.id})}
+  post(o.chat,"sys",{type:"sys",text:`Delivery confirmed by the buyer.`});post(o.chat,"sys",{type:"rate",ref:o.id})}
 function aiReply(text){const t=text.toLowerCase();
   if(/discount|cheaper|less|bargain|best price|return|refund|complain|damag|human|person|call me|agent/.test(t))return{handoff:true};
   const p=S.products.find(p=>p.vis==="Everyone"&&p.name.toLowerCase().split(/[ ,]/).some(w=>w.length>4&&t.includes(w)));
   if(/time|open|hour|timing|close/.test(t))return{text:`We are open ${BIZ.st.hours}. You can order on BOC any time.`};
-  if(/deliver|ship|courier|reach|kochi/.test(t))return{text:"We ship across India. To Kochi it takes 4–5 days by standard delivery (₹78) or 2 days by express (₹142). Your payment is held until you confirm you received it."};
+  if(/deliver|ship|courier|reach|kochi/.test(t))return{text:"We ship across India. To Kochi it takes 4–5 days by standard delivery (₹78) or 2 days by express (₹142). You pay the business directly by UPI or card."};
   if(p)return{text:`Yes, the ${p.name} is in stock${p.vars.length>1?" in "+p.vars.join(", "):""}. It is ${money(p.price)} plus GST. Here it is:`,pid:p.id};
   if(/price|cost|rate|how much|stock|available|have/.test(t))return{text:"Here are our most popular pieces right now. Tap Order on any of them, or tell me what you are looking for.",pid:"p1"};
   return{handoff:true,unsure:true}}
@@ -900,12 +901,12 @@ const act={
   track:e=>{S.sheet={type:"track",order:e.dataset.id};render()},
   confirm:e=>{cpConfirm(D(e.dataset.id));render()},
   issue:e=>{S.sheet={type:"issue",order:e.dataset.id};render()},
-  doissue:e=>{const o=D(e.dataset.id);S.sheet=null;C(o.chat).needsHuman=true;post(o.chat,"cp",`Problem with ${code(o.id)}: ${e.dataset.v}.`);post(o.chat,"sys",{type:"sys",text:"Payment stays on hold while the business responds."});respondAsBiz(o.chat,"complaint");render()},
+  doissue:e=>{const o=D(e.dataset.id);S.sheet=null;C(o.chat).needsHuman=true;post(o.chat,"cp",`Problem with ${code(o.id)}: ${e.dataset.v}.`);post(o.chat,"sys",{type:"sys",text:"BOC has told the business. Refunds come from them; BOC steps in after 48 hours."});respondAsBiz(o.chat,"complaint");render()},
   rate:e=>{const o=D(e.dataset.id),n=+e.dataset.n;o.rated=n;BIZ.st.reviews++;post(o.chat,"cp",`Rated ${n} stars.`);toast("Thanks for rating");render()},
   cporder:e=>{S.sheet={type:"order",pid:e.dataset.id,qty:1,v:P(e.dataset.id).vars[0],ship:"std",pay:"upi"};render()},
   oqty:e=>{S.sheet.qty=Math.max(1,Math.min(P(S.sheet.pid).stock,S.sheet.qty+ +e.dataset.d));render()},
   placeorder:()=>{const sh=S.sheet,p=P(sh.pid);const cid="c1";const fee=sh.ship==="exp"?142:78;
-    if(sh.pay!=="cod"){S.sheet={type:"paying",amount:totals([{qty:sh.qty,price:p.price}],0,fee).total};render();setTimeout(()=>{S.sheet=null;placeOrder(cid,[{pid:p.id,qty:sh.qty,price:p.price,v:sh.v}],sh.pay,fee);toast("Paid. Held by BOC Protect until delivery.");if(!(cur().name==="chat"&&cur().id===cid))openChat(cid);else render()},900);return}
+    if(sh.pay!=="cod"){S.sheet={type:"paying",amount:totals([{qty:sh.qty,price:p.price}],0,fee).total};render();setTimeout(()=>{S.sheet=null;placeOrder(cid,[{pid:p.id,qty:sh.qty,price:p.price,v:sh.v}],sh.pay,fee);toast("Paid to the seller.");if(!(cur().name==="chat"&&cur().id===cid))openChat(cid);else render()},900);return}
     S.sheet=null;placeOrder(cid,[{pid:p.id,qty:sh.qty,price:p.price,v:sh.v}],"cod",fee);openChat(cid)},
   paysheet:e=>{S.sheet={type:"pay",doc:e.dataset.id,method:"UPI app"};render()},
   dopay:()=>{const sh=S.sheet;sh.busy=true;render();setTimeout(()=>{const d=D(sh.doc);if(d.kind==="paylink"){d.status="paid";post(d.chat,"cp",{type:"payment",amount:d.amount,ref:d.id,how:sh.method,dir:"in"});S.months[5][1]+=d.amount}else payDoc(d,sh.method);sh.busy=false;sh.done=true;render()},900)},
@@ -973,7 +974,7 @@ function sendText(cid){const v=(S.drafts[cid]||"").trim();if(!v)return;S.drafts[
 const GUIDE=[
   {t:"Sign up a business",d:"Phone, OTP, then GSTIN check, owner e-KYC, bank verification and shop setup. This is what earns the verified badge.",icon:"store",color:"#7A2E5C",run:()=>startOb("business")},
   {t:"Sign up as a shopper",d:"A personal account needs only a phone number. It can chat, buy, pay and sign, but never sell.",icon:"user",color:"#8A3FA0",run:()=>startOb()},
-  {t:"Be the customer: order, pay, track, rate",d:"Meera's phone. Order the saree from the chat, pay with BOC Protect, watch it ship, confirm delivery to release the money.",icon:"bag",color:"#0F7C86",run:()=>{setView("customer");openChat("c1")}},
+  {t:"Be the customer: order, pay, track, rate",d:"Meera's phone. Order the saree from the chat, pay the shop directly, watch it ship, confirm delivery.",icon:"bag",color:"#0F7C86",run:()=>{setView("customer");openChat("c1")}},
   {t:"Check who you are dealing with",d:"Compare the verified textile shop with an unverified store pushing a UPI deal. The profile shows GST, KYC, bank, orders and reviews.",icon:"shield",color:"#2E7D4F",run:()=>{setView("customer");openChat("x1")}},
   {t:"The AI assistant answers and hands off",d:"As Meera, ask about delivery, then ask for a discount. The assistant answers the first and passes the second to Ravi.",icon:"spark",color:"#2B3A8C",run:()=>{setView("customer");openChat("c1");S.drafts.c1="How long does delivery to Kochi take?";render()}},
   {t:"Sell and ship as the owner",d:"Send Meera a product. She orders and pays, you accept, pick a courier and book pickup. Tracking updates in the chat.",icon:"truck",color:"#C0562A",run:()=>{setView("owner");openChat("c1")}},
@@ -982,7 +983,7 @@ const GUIDE=[
   {t:"Staff discount needs approval",d:"As Ravi, quote 15% off. It waits for the owner. Switch back to Owner and approve it from Pending.",icon:"users",color:"#4A5D23",run:()=>{setView("staff");openChat("c2")}},
   {t:"Restock from three suppliers",d:"Low stock in Pending. Request quotes from all suppliers, compare, raise the PO and receive the goods.",icon:"cart",color:"#9A6B12",run:()=>{setView("owner");S.tab="pending";render()}},
   {t:"Countersign a contract",d:"Nisha Boutique signed a supply agreement. Review and sign with OTP. Both copies carry the same fingerprint.",icon:"pen",color:"#5B3A8C",run:()=>{setView("owner");openChat("c7")}},
-  {t:"Money, payouts and the ledger",d:"Money held by BOC Protect, payouts to the bank, who owes you and who you owe.",icon:"wallet",color:"#2E7D4F",run:()=>{setView("owner");S.tab="biz";S.stack=[{name:"tab"},{name:"money"}];render()}}
+  {t:"Money, payouts and the ledger",d:"Payments into your own account, who owes you and who you owe.",icon:"wallet",color:"#2E7D4F",run:()=>{setView("owner");S.tab="biz";S.stack=[{name:"tab"},{name:"money"}];render()}}
 ];
 document.getElementById("flows").innerHTML=GUIDE.map((g,i)=>`<button class="flow" data-act="guide" data-i="${i}"><span class="ft" style="background:${g.color}">${ic(g.icon)}</span><span><h3>${g.t}</h3><p>${g.d}</p></span>${ic("chevr")}</button>`).join("");
 
@@ -1017,3 +1018,6 @@ render();
 <script src="crm.js"></script>
 <script src="screens.js"></script>
 <script src="ledger.js"></script>
+<script src="chatkit.js"></script>
+<script src="reviews.js"></script>
+<script src="direct.js"></script>
