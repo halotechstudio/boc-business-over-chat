@@ -1,0 +1,18 @@
+{
+  "name": "Beasy",
+  "world": "shade-card",
+  "platform": "adaptive",
+  "source": "prototype/index.html",
+  "tokens": {
+    "color": {
+      "light": {"ground":"#FBFAF7","card":"#FFFFFF","sunk":"#F1EEE8","line":"#E5E0D6","ink":"#1A1714","ink2":"#5F584E","tint":"#2B3A8C","tintSoft":"#E3E6F4","wait":"#E8A317","waitSoft":"#FBEFD2","good":"#2E7D4F","goodSoft":"#DCEFE3","bad":"#B8322A","badSoft":"#F7DEDA"},
+      "dark": {"ground":"#14130F","card":"#1D1B17","sunk":"#27241F","line":"#36322B","ink":"#F2EEE6","ink2":"#B1A99B","tint":"#9EAAF4","tintSoft":"#272D4D","wait":"#F0B53A","waitSoft":"#3A2E12","good":"#5BC48A","goodSoft":"#173325","bad":"#F07A6E","badSoft":"#3D1C18"},
+      "chip": {"wait":"#E8A317","good":"#2E7D4F","bad":"#B8322A","tint":"#2B3A8C","mute":"#7A7266"},
+      "party": ["#7A2E5C","#0F7C86","#C0562A","#4A5D23","#2E7D4F","#8A3FA0","#2B3A8C","#9A6B12","#5B4A8C","#A33A3A"]
+    },
+    "font": {"ui":"platform (Roboto / SF Pro)","code":"Barlow Condensed 700","number":"Roboto Mono 500"},
+    "radius": {"chip":8,"card":14,"sheetAndroid":24,"sheetIos":14,"buttonAndroid":20,"buttonIos":12},
+    "target": {"android":48,"ios":44}
+  },
+  "rules": ["wait colour only when the viewer must act","flat colour only","codes in condensed face with a space","amounts in tabular mono with Indian grouping"]
+}

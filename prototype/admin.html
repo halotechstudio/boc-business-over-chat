@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BOC Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+<style>
+/* BOC admin console for the BOC team: dense desktop tool in the Shade Card system. Example data only. */
+:root{
+  --jet:#00262B; --mint:#ABFFAE; --cyan:#CDE3E6;
+  --ground:#F2F1EE; --card:#FFFFFF; --sunk:#E9EAE6; --line:#DADCD6; --ink:#0B1F22; --ink2:#566366;
+  --tint:#00262B; --tint-ink:#FFFFFF; --tint-soft:#CDE3E6; --wait:#ABFFAE; --wait-ink:#00262B; --wait-soft:#E4FBE5;
+  --good:#1E7A47; --good-soft:#E3F1E8; --bad:#B3261E; --bad-soft:#F8E4E2; --amber:#A86A12; --mute:#7C8789;
+  --f-ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif; --f-code:"Inter",system-ui,sans-serif; --f-num:"Inter",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#071D21; --card:#0C2A2F; --sunk:#12353B; --line:#1F474D; --ink:#E7F0F0; --ink2:#9DB2B4;
+  --tint:#ABFFAE; --tint-ink:#00262B; --tint-soft:#173E44; --wait-soft:#1C4A3B;
+  --good:#7FD9A0; --good-soft:#163A2B; --bad:#FF8A80; --bad-soft:#3E1C1A; --amber:#F0C06A; --mute:#7F9496; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#071D21; --card:#0C2A2F; --sunk:#12353B; --line:#1F474D; --ink:#E7F0F0; --ink2:#9DB2B4;
+  --tint:#ABFFAE; --tint-ink:#00262B; --tint-soft:#173E44; --wait-soft:#1C4A3B;
+  --good:#7FD9A0; --good-soft:#163A2B; --bad:#FF8A80; --bad-soft:#3E1C1A; --amber:#F0C06A; --mute:#7F9496; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.45 var(--f-ui)}
+button{font:inherit;color:inherit;cursor:pointer}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{background:var(--card);border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
+.brand b{font-size:17px}.brand small{display:block;color:var(--ink2);font-size:12px}
+.logo{min-width:32px;padding:0 6px;height:32px;border-radius:8px;background:var(--tint);color:var(--tint-ink);display:grid;place-items:center;font:700 15px var(--f-code)}
+.nav{display:grid;gap:2px}
+.nav button{display:flex;justify-content:space-between;align-items:center;border:0;background:none;text-align:left;padding:9px 10px;border-radius:8px;min-height:40px}
+.nav button:hover{background:var(--sunk)}.nav button.on{background:var(--tint-soft);color:var(--tint);font-weight:700}
+.cnt{font:500 12px var(--f-num);padding:1px 7px;border-radius:6px;background:var(--wait);color:var(--wait-ink)}
+.cnt.z{background:var(--sunk);color:var(--ink2)}
+main{padding:20px 28px 40px;min-width:0}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.top h1{margin:0;font-size:24px;letter-spacing:-.01em}
+.top p{margin:2px 0 0;color:var(--ink2)}
+.role{display:flex;align-items:center;gap:8px;color:var(--ink2)}
+select,input[type=search],input[type=text],textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px}
+textarea{width:100%;min-height:72px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:16px;overflow:hidden}
+.ph{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.ph h2{margin:0;font-size:15px}
+.pb{padding:14px 16px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;font-weight:500;color:var(--ink2);background:var(--sunk);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tr.sel td{background:var(--tint-soft)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.code{font:700 14px var(--f-code);letter-spacing:.02em}
+.chip{display:inline-block;padding:2px 8px;border-radius:8px;font-size:12px;font-weight:500;color:#fff;white-space:nowrap}
+.t-wait{background:#E8A317;color:#1A1714}.t-good{background:#2E7D4F}.t-bad{background:#B8322A}.t-tint{background:#2B3A8C}.t-mute{background:#7A7266}
+.btn{border:0;background:var(--tint);color:var(--tint-ink);border-radius:8px;padding:8px 14px;min-height:40px;font-weight:500}
+.btn.ghost{background:var(--sunk);color:var(--ink)}.btn.bad{background:var(--bad);color:#fff}.btn.wait{background:var(--wait);color:var(--wait-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi .l{color:var(--ink2);font-size:12.5px}.kpi .v{font:500 22px var(--f-num);margin-top:4px}
+.muted{color:var(--ink2)}.small{font-size:12.5px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
+.dl{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 12px;margin:0}
+.dl dt{color:var(--ink2)}.dl dd{margin:0}
+.note{padding:10px 12px;border-radius:10px;background:var(--wait-soft);margin-bottom:12px}
+.note.bad{background:var(--bad-soft)}.note.good{background:var(--good-soft)}
+.bars{display:grid;gap:8px}.bar{display:grid;grid-template-columns:120px minmax(0,1fr) 90px;gap:10px;align-items:center}
+.bar i{display:block;height:12px;border-radius:4px;background:var(--tint)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2A2722;color:#F2EEE6;padding:12px 18px;border-radius:8px;z-index:9;max-width:calc(100vw - 32px)}
+label.f{display:grid;gap:4px;font-size:12.5px;color:var(--ink2)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.empty{padding:22px 16px;color:var(--ink2)}
+.lnk{border:0;background:none;padding:6px 0;min-height:32px;color:var(--tint);font-weight:500;text-align:left}.lnk:hover{text-decoration:underline}
+td.num{white-space:nowrap}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:12px 16px}
+  .nav{display:flex;overflow-x:auto;gap:4px;padding-bottom:4px}
+  .nav button{white-space:nowrap;flex:0 0 auto;gap:6px}
+  main{padding:16px}
+  .grid2{grid-template-columns:1fr}
+  .dl{grid-template-columns:120px minmax(0,1fr)}
+}
+/* calm ledger: hairlines, near-square corners, status in text colour, mint only for the next action */
+body{font-feature-settings:"tnum" 1}
+::selection{background:var(--mint);color:var(--jet)}
+.side{background:var(--jet);color:#E7F0F0;border-right:0}
+.brand small{color:#9DB7BA}.logo{background:var(--mint);color:var(--jet);border-radius:3px;font-family:var(--f-ui)}
+.nav button{color:#C9DADC;border-radius:0}.nav button:hover{background:rgba(255,255,255,.06)}
+.nav button.on{background:none;color:var(--mint);font-weight:500;box-shadow:inset 2px 0 0 var(--mint)}
+.cnt{background:var(--mint);color:var(--jet);border-radius:3px;font-family:var(--f-num)}.cnt.z{background:rgba(255,255,255,.08);color:#9DB7BA}
+.top h1{font-weight:300;font-size:32px;letter-spacing:-.025em}
+.panel,.kpi{border-radius:0;box-shadow:none}
+.ph h2{font-weight:500}
+th{background:var(--card);border-bottom:1px solid var(--ink);font-weight:500}
+.kpi .v{font-weight:300;font-size:30px;letter-spacing:-.02em}
+.code{font-weight:500;letter-spacing:.02em;font-size:13px}
+.chip{background:none!important;padding:0;border-radius:0;font-weight:500}
+.t-good{color:var(--good)}.t-bad{color:var(--bad)}.t-tint{color:var(--amber)}.t-mute{color:var(--mute)}
+.chip.t-wait{background:var(--mint)!important;color:var(--jet);padding:2px 8px;border-radius:3px}
+.btn{border-radius:3px;background:var(--mint);color:var(--jet)}
+.btn.ghost{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.btn.bad{background:var(--card);border:1px solid var(--bad);color:var(--bad)}
+select,input[type=search],input[type=text],textarea{border-radius:3px}
+.note{border-radius:0;background:var(--cyan);color:var(--jet)}.note.bad{background:var(--bad-soft);color:var(--ink)}.note.good{background:var(--good-soft);color:var(--ink)}
+.bar i{border-radius:0;background:var(--jet)}
+.lnk{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .bar i{background:var(--mint)}}
+.toast{background:var(--jet);border-radius:3px}
+@media (max-width:860px){.nav button.on{box-shadow:inset 0 -2px 0 var(--mint)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side"><div class="brand"><span class="logo">BOC</span><span><b>BOC Admin</b><small>For the BOC team · example data</small></span></div><nav class="nav" id="nav" aria-label="Sections"></nav></aside>
+  <main id="main"></main>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="tests/runner.js"></script>
+<script src="shared.js"></script>
+<script>
+"use strict";
+/* ===== state ===== */
+const ROLES={
+  "Super admin":["users","verify","support","disputes","features","billing","ads","broadcast","money","fraud","moderation","reports","legal","audit","team"],
+  "Support agent":["users","support","disputes"],
+  "Verification officer":["users","verify","moderation"],
+  "Finance":["money","billing","disputes"],
+  "Marketing":["ads","broadcast","reports","features"]};
+const SECTIONS={users:"Users",verify:"Verification queue",support:"Support tickets",disputes:"Disputes",features:"Features and limits",billing:"Plans and billing",ads:"Ads",broadcast:"Broadcasts",money:"Money",fraud:"Fraud flags",moderation:"Catalog moderation",reports:"Reports",legal:"Legal and data requests",audit:"Audit log",team:"Admin team and roles"};
+const NEEDS_APPROVAL=["refund","split","suspend","release"];
+const A={who:"Priya",role:"Super admin",section:"users",sel:null,q:"",seg:{model:"",city:"",plan:"",verified:""},bc:{title:"",body:"",channel:"In-app",target:"segment",list:[]},ft:{target:"segment",key:"items",value:"200",list:[]}};
+const fresh=()=>structuredClone(SEED.admin);
+function DB(){const s=BOCStore.load();return (s&&s.admin)||fresh()}
+function write(fn){BOCStore.patch("admin",a=>{a=a||fresh();fn(a);return a});render()}
+const money=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const now=()=>new Date().toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+const chip=(t,l)=>`<span class="chip t-${t}">${esc(l)}</span>`;
+let toastT;function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2600)}
+
+/* ===== actions with audit and maker-checker ===== */
+const needsApproval=kind=>NEEDS_APPROVAL.includes(kind);
+function effect(a,x){
+  const biz=a.businesses.find(b=>b.key===x.target);
+  switch(x.kind){
+    case "suspend":if(biz)biz.status="suspended";break;
+    case "unsuspend":if(biz)biz.status="active";break;
+    case "reverify":if(biz){biz.verified=false;biz.status="re-verifying"}break;
+    case "release":case "refund":case "split":{const d=a.disputes.find(z=>z.id===x.target);if(d&&d.status==="open"){if(x.kind==="release"){d.status="resolved";d.outcome="Released to seller";a.escrow.held=Math.max(0,a.escrow.held-d.amount);a.escrow.paidOut+=d.amount;break}d.status="resolved";d.outcome=x.kind==="refund"?`Refunded ${money(d.amount)} to buyer`:`Split: buyer ${money(d.amount*x.payload.buyerPct/100)}, seller ${money(d.amount*(100-x.payload.buyerPct)/100)}`;a.escrow.held=Math.max(0,a.escrow.held-d.amount)}break}
+  }
+}
+function doAct(kind,target,payload={}){let out;
+  write(a=>{const x={id:"AC-"+String(a.audit.length+1).padStart(4,"0"),kind,target,payload,by:A.who,byRole:A.role,at:now(),status:needsApproval(kind)?"awaiting approval":"done"};
+    a.audit.unshift(x);if(x.status==="done")effect(a,x);out=x});
+  toast(out.status==="done"?"Done. Logged in the audit log.":"Sent for approval by a second admin.");return out}
+function approve(id,who){const role=(DB().staff.find(s=>s.name===who)||{}).role;let res={ok:false,msg:""};
+  write(a=>{const x=a.audit.find(z=>z.id===id);if(!x||x.status!=="awaiting approval"){res.msg="Nothing to approve";return}
+    if(x.by===who){res.msg="You can't approve your own request. Ask another admin.";return}
+    if(role!=="Super admin"&&!(ROLES[role]||[]).includes(sectionFor(x.kind))){res.msg="Your role can't approve this.";return}
+    const tgt=a.disputes.find(z=>z.id===x.target);if(tgt&&tgt.status!=="open"){x.status="cancelled";res.msg="This dispute was already settled, so the request was cancelled.";return}x.status="done";x.approvedBy=who;effect(a,x);a.audit.unshift({id:"AC-"+String(a.audit.length+1).padStart(4,"0"),kind:"approve",target:x.id,by:who,at:now(),status:"done"});res.ok=true});
+  if(res.msg)toast(res.msg);else toast("Approved and applied.");return res}
+function sectionFor(kind){return {suspend:"users",refund:"disputes",split:"disputes",release:"disputes"}[kind]||"users"}
+/* segment matching shared by broadcasts and feature overrides: all set filters must match */
+function matches(b,seg){return(!seg.model||b.model.includes(seg.model))&&(!seg.city||b.city===seg.city)&&(!seg.plan||b.plan===seg.plan)&&(!seg.verified||(seg.verified==="yes")===b.verified)}
+const segCount=(db,seg)=>db.businesses.filter(b=>matches(b,seg)).length;
+
+/* ===== views ===== */
+const panel=(title,body,extra="")=>`<section class="panel"><div class="ph"><h2>${title}</h2>${extra}</div>${body}</section>`;
+const table=(cols,rows)=>rows.length?`<div class="tw"><table><thead><tr>${cols.map(c=>`<th scope="col">${c}</th>`).join("")}</tr></thead><tbody>${rows.join("")}</tbody></table></div>`:`<div class="empty">Nothing here right now.</div>`;
+const B=(act,label,cls="",data="")=>`<button class="btn ${cls}" data-act="${act}" ${data}>${label}</button>`;
+const pendingApprovals=db=>db.audit.filter(x=>x.status==="awaiting approval");
+const V={
+  users(db){const q=A.q.trim().toLowerCase();
+    const list=db.businesses.filter(b=>!q||[b.name,b.phone,b.gstin,b.city].join(" ").toLowerCase().replace(/\s/g,"").includes(q.replace(/\s/g,"")));
+    const st=b=>b.status==="suspended"?chip("bad","Suspended"):b.status==="re-verifying"?chip("wait","Re-verifying"):b.verified?chip("good","Verified"):chip("mute","Phone only");
+    const rows=list.map(b=>`<tr class="${A.sel===b.key?"sel":""}"><td><button class="lnk" data-act="sel" data-k="${b.key}">${esc(b.name)}</button><div class="small muted">${esc(b.cat)} · ${esc(b.model)}</div></td><td class="num">${esc(b.phone)}</td><td class="num small">${esc(b.gstin||"—")}</td><td>${esc(b.city)}</td><td>${esc(SEED.plans[b.plan].name)}</td><td>${st(b)}</td></tr>`);
+    const s=db.businesses.find(b=>b.key===A.sel);const waiting=s&&pendingApprovals(db).find(x=>x.target===s.key);
+    const detail=s?panel(esc(s.name),`<div class="pb"><dl class="dl"><dt>Phone</dt><dd class="num">${esc(s.phone)}</dd><dt>GSTIN</dt><dd class="num">${esc(s.gstin||"Not registered")}</dd><dt>Type</dt><dd>${esc(s.kind)} · ${esc(s.model)}</dd><dt>Plan</dt><dd>${esc(SEED.plans[s.plan].name)}</dd><dt>Sales on BOC</dt><dd class="num">${money(s.gmv)}</dd><dt>Joined</dt><dd>${esc(s.joined)}</dd><dt>Open tickets</dt><dd>${db.tickets.filter(t=>t.biz===s.key&&t.status==="open").length}</dd><dt>Disputes</dt><dd>${db.disputes.filter(d=>d.seller===s.name&&d.status==="open").length} open</dd></dl>
+      ${s.flags?`<div class="note bad" style="margin-top:12px"><b>Fraud signals</b><br>${s.flags.map(esc).join("<br>")}</div>`:""}
+      ${waiting?`<div class="note" style="margin-top:12px">Suspension requested by ${esc(waiting.by)} · waiting for a second admin</div>`:""}
+      <div class="row" style="margin-top:12px">${s.status==="suspended"?B("unsuspend","Lift suspension","","data-k=\""+s.key+"\""):B("suspend","Suspend","bad","data-k=\""+s.key+"\""+(waiting?" disabled":""))}${B("reverify","Ask to re-verify","ghost","data-k=\""+s.key+"\"")}</div>
+      <p class="small muted">Suspending needs a second admin. While suspended, buyers can't order or pay this business and see a notice in the chat and on its web page.</p></div>`):"";
+    return panel("Businesses",`<div class="pb"><input type="search" id="q" placeholder="Search by phone, GSTIN or name" value="${esc(A.q)}" aria-label="Search businesses" style="width:100%"></div>`+table(["Business","Phone","GSTIN","City","Plan","Status"],rows))+detail+
+      panel("Personal accounts",table(["Name","Phone","City","Orders","Status"],db.people.map(p=>`<tr><td>${esc(p.name)}</td><td class="num">${esc(p.phone)}</td><td>${esc(p.city)}</td><td class="num">${p.orders}</td><td>${chip("good","Active")}</td></tr>`)))},
+  verify(db){return panel("Checks that failed automatically",table(["Ref","Business","Check","Why it failed","When",""],db.verifyQueue.map(v=>`<tr><td class="code">${v.id.replace("-"," ")}</td><td>${esc(v.biz)}<div class="small muted">${esc(v.city)}</div></td><td>${esc(v.check)}</td><td>${esc(v.reason)}</td><td class="small">${esc(v.at)}</td><td>${v.status==="open"?`<div class="row">${B("vpass","Approve","","data-id=\""+v.id+"\"")}${B("vfail","Reject","ghost","data-id=\""+v.id+"\"")}</div>`:chip(v.status==="approved"?"good":"bad",v.status==="approved"?"Approved":"Rejected")}</td></tr>`)))},
+  support(db){const t=db.tickets.find(x=>x.id===A.sel);
+    const rows=db.tickets.map(x=>`<tr class="${A.sel===x.id?"sel":""}"><td><button class="lnk" data-act="sel" data-k="${x.id}"><span class="code">${x.id.replace("-"," ")}</span></button></td><td>${esc(x.subject)}<div class="small muted">${esc(x.cat)}</div></td><td>${esc(x.from)}</td><td class="small">${esc(x.at)}</td><td>${x.status==="open"?chip("wait","Open"):chip("good","Closed")}</td></tr>`);
+    const d=t?panel("Ticket "+t.id.replace("-"," "),`<div class="pb"><dl class="dl"><dt>From</dt><dd>${esc(t.from)}</dd><dt>About</dt><dd>${esc(t.subject)}</dd><dt>Chat access</dt><dd>${t.access?chip("good","Granted by the user"):chip("mute","Not granted")}</dd></dl>
+      ${t.access?`<div class="note good" style="margin-top:12px">The user shared this chat with support. Agents see only this chat, and the view is logged.</div>`:`<div class="note" style="margin-top:12px">Chats stay private. Ask the user to share this chat before you can read it.</div>${B("askaccess","Ask for chat access","ghost","data-id=\""+t.id+"\"")}`}
+      ${t.notes.map(n=>`<p class="small"><b>${esc(n.by)}</b> · ${esc(n.at)}<br>${esc(n.text)}</p>`).join("")}
+      <label class="f" style="margin-top:12px">Reply to the user<textarea id="reply"></textarea></label><div class="row" style="margin-top:8px">${B("treply","Send reply","","data-id=\""+t.id+"\"")}${t.status==="open"?B("tclose","Close ticket","ghost","data-id=\""+t.id+"\""):""}</div></div>`):"";
+    return panel("Inbox",table(["Ticket","Subject","From","Opened","Status"],rows))+d},
+  disputes(db){return panel("Disputes on held payments",`<div class="pb small muted">Money stays held by BOC Protect until a dispute is settled. Refunds and splits need a second admin.</div>`+table(["Ref","Order","Buyer","Seller","Held","Reason",""],db.disputes.map(d=>{const w=pendingApprovals(db).find(x=>x.target===d.id);
+    return `<tr><td class="code">${d.id.replace("-"," ")}</td><td class="code">${esc(d.order)}</td><td>${esc(d.buyer)}</td><td>${esc(d.seller)}</td><td class="num">${money(d.amount)}</td><td>${esc(d.reason)}</td><td>${d.status==="resolved"?chip("good",d.outcome):w?chip("tint","Waiting for second admin"):`<div class="row">${B("release","Release to seller","ghost","data-id=\""+d.id+"\"")}${B("refund","Refund buyer","","data-id=\""+d.id+"\"")}${B("split","Split 60/40","ghost","data-id=\""+d.id+"\"")}</div>`}</td></tr>`})))},
+  features(db){const f=A.ft,n=f.target==="segment"?segCount(db,A.seg):f.list.length;
+    const ov=Object.entries(db.flags||{});
+    return panel("Extend a service or raise a limit",`<div class="pb"><div class="form"><label class="f">Apply to<select data-bind="ft.target"><option value="segment" ${f.target==="segment"?"selected":""}>A segment</option><option value="list" ${f.target==="list"?"selected":""}>Chosen businesses</option></select></label>
+      <label class="f">What<select data-bind="ft.key">${[["items","Product limit"],["users","Staff seats"],["msgs","Broadcast messages"],["credit","Credit terms feature"],["aiBeta","AI assistant beta"]].map(([k,l])=>`<option value="${k}" ${f.key===k?"selected":""}>${l}</option>`).join("")}</select></label>
+      <label class="f">Value<input type="text" data-bind="ft.value" value="${esc(f.value)}"></label></div>
+      ${f.target==="segment"?segForm():listForm(db,"ft")}<p class="small muted">Reaches <b class="num">${n}</b> ${n===1?"business":"businesses"}. Overrides beat plan limits.</p>${B("applyft","Apply override","",n?"":"disabled")}</div>`)+
+      panel("Active overrides",table(["Business","Override"],ov.map(([k,o])=>`<tr><td>${esc((db.businesses.find(b=>b.key===k)||{}).name||k)}</td><td>${Object.entries(o).map(([a,b])=>esc(a)+" = "+esc(b)).join(", ")}</td></tr>`)))},
+  billing(db){return `<div class="kpis">${Object.entries(SEED.plans).map(([k,p])=>`<div class="kpi"><div class="l">${p.name} · ${money(p.price)}/month</div><div class="v">${db.businesses.filter(b=>b.plan===k).length}</div></div>`).join("")}</div>`+
+    panel("Renewals",table(["Business","Plan","Amount","Renews","Status"],db.billing.map(b=>`<tr><td>${esc(b.biz)}</td><td>${esc(b.plan)}</td><td class="num">${money(b.amount)}</td><td>${esc(b.renews)}</td><td>${b.status==="failed"?chip("bad","Payment failed")+" "+B("retry","Retry","ghost","data-k=\""+esc(b.biz)+"\""):chip("good","Paid")}</td></tr>`)))+
+    panel("Coupons",table(["Code","Gives","Used"],db.coupons.map(c=>`<tr><td class="code">${esc(c.code)}</td><td>${esc(c.what)}</td><td class="num">${c.used} of ${c.limit}</td></tr>`)))+`<p class="small muted">Example pricing.</p>`},
+  ads(db){return panel("Ads",`<div class="pb small muted">Only verified businesses can advertise. Ads show in Explore and search, never inside chats. Prices: ${money(SEED.adprice.cpc)} a click or ${money(SEED.adprice.day)} a day per slot (example).</div>`+table(["Ref","Business","Where","Pays","Budget","Spent","Clicks","Status"],db.ads.map(a=>`<tr><td class="code">${a.id.replace("-"," ")}</td><td>${esc(a.biz)}${a.text?`<div class="small muted">“${esc(a.text)}”</div>`:""}</td><td>${a.slot==="explore"?"Explore":"Search"}</td><td>${a.model==="cpc"?"Per click":"Per day"}</td><td class="num">${money(a.budget)}</td><td class="num">${money(a.spent)}</td><td class="num">${a.clicks}</td><td>${a.status==="pending"?`<div class="row">${B("adok","Approve","","data-id=\""+a.id+"\"")}${B("adno","Reject","ghost","data-id=\""+a.id+"\"")}</div>`:chip(a.status==="live"?"good":"bad",a.status==="live"?"Live":"Rejected")}</td></tr>`)))},
+  broadcast(db){const b=A.bc,n=b.target==="segment"?segCount(db,A.seg):b.list.length;
+    return panel("New announcement from BOC",`<div class="pb"><div class="form"><label class="f">Title<input type="text" data-bind="bc.title" value="${esc(b.title)}"></label><label class="f">Send as<select data-bind="bc.channel">${["In-app","Push"].map(x=>`<option ${b.channel===x?"selected":""}>${x}</option>`).join("")}</select></label><label class="f">To<select data-bind="bc.target"><option value="segment" ${b.target==="segment"?"selected":""}>A segment</option><option value="list" ${b.target==="list"?"selected":""}>Chosen businesses</option></select></label></div>
+      <label class="f">Message<textarea data-bind="bc.body">${esc(b.body)}</textarea></label>${b.target==="segment"?segForm():listForm(db,"bc")}
+      <p class="small muted">Reaches <b class="num">${n}</b> ${n===1?"business":"businesses"}. It arrives in the "BOC updates" chat.</p><div class="row">${B("sendbc","Send now","",b.title&&b.body&&n?"":"disabled")}${B("schedbc","Schedule for 9 am tomorrow","ghost",b.title&&b.body&&n?"":"disabled")}</div></div>`)+
+      panel("Sent and scheduled",table(["Ref","Title","Channel","Sent","Read","Status"],db.broadcasts.map(x=>`<tr><td class="code">${x.id.replace("-"," ")}</td><td>${esc(x.title)}</td><td>${esc(x.channel)}</td><td class="num">${x.sent}</td><td class="num">${x.read}</td><td>${x.status==="sent"?chip("good","Sent "+esc(x.at)):chip("tint","Scheduled")}</td></tr>`)))},
+  money(db){const e=db.escrow,f=e.fees,total=Object.values(f).reduce((a,b)=>a+b,0);
+    return `<div class="kpis"><div class="kpi"><div class="l">Held by BOC Protect</div><div class="v">${money(e.held)}</div></div><div class="kpi"><div class="l">Paid out to banks</div><div class="v">${money(e.paidOut)}</div></div><div class="kpi"><div class="l">BOC revenue this month</div><div class="v">${money(total)}</div></div></div>`+
+    panel("Revenue by source",`<div class="pb bars">${Object.entries(f).map(([k,v])=>`<div class="bar"><span>${{payments:"Payment fees",subscriptions:"Plans",ads:"Ads",shipping:"Shipping margin"}[k]}</span><i style="width:${Math.round(v/total*100)}%"></i><span class="num">${money(v)}</span></div>`).join("")}</div>`)+
+    panel("Payouts",table(["Business","Amount","To","Status"],[["Shree Textiles",42300,"KBNK ••4821","Paid"],["Malabar Spice House",18640,"FDRL ••1190","Paid"],["Glow Studio Salon",6200,"HDFC ••7702","Failed: account frozen"]].map(([b,a,t,s])=>`<tr><td>${b}</td><td class="num">${money(a)}</td><td class="num">${t}</td><td>${chip(s==="Paid"?"good":"bad",s)}</td></tr>`)))},
+  fraud(db){const f=db.businesses.filter(b=>b.flags);return panel("Accounts with risk signals",table(["Business","Signals","Status",""],f.map(b=>`<tr><td>${esc(b.name)}</td><td>${b.flags.map(esc).join("<br>")}</td><td>${b.status==="suspended"?chip("bad","Suspended"):chip("wait","Watching")}</td><td>${B("sel","Open","ghost","data-k=\""+b.key+"\" data-go=\"users\"")}</td></tr>`)))},
+  moderation(db){return panel("Listings held for review",table(["Ref","Business","Item","Why",""],db.moderation.map(m=>`<tr><td class="code">${m.id.replace("-"," ")}</td><td>${esc(m.biz)}</td><td>${esc(m.item)}</td><td>${esc(m.reason)}</td><td>${m.status==="open"?`<div class="row">${B("mdok","Allow","ghost","data-id=\""+m.id+"\"")}${B("mdno","Remove","bad","data-id=\""+m.id+"\"")}</div>`:chip(m.status==="allowed"?"good":"bad",m.status==="allowed"?"Allowed":"Removed")}</td></tr>`)))},
+  reports(db){const bz=db.businesses,by=(k)=>Object.entries(bz.reduce((o,b)=>(o[b[k]]=(o[b[k]]||0)+b.gmv,o),{})).sort((a,b)=>b[1]-a[1]),max=Math.max(...bz.map(b=>b.gmv));
+    const bars=list=>`<div class="pb bars">${list.map(([k,v])=>`<div class="bar"><span>${esc(k)}</span><i style="width:${Math.max(2,Math.round(v/by("cat")[0][1]*100))}%"></i><span class="num">${money(v)}</span></div>`).join("")}</div>`;
+    return `<div class="kpis"><div class="kpi"><div class="l">Businesses</div><div class="v">${bz.length}</div></div><div class="kpi"><div class="l">Verified</div><div class="v">${bz.filter(b=>b.verified).length}</div></div><div class="kpi"><div class="l">Personal accounts</div><div class="v">${db.people.length}</div></div><div class="kpi"><div class="l">Sales through BOC</div><div class="v">${money(bz.reduce((a,b)=>a+b.gmv,0))}</div></div></div>`+
+      panel("Sales by category",bars(by("cat")))+panel("Sales by city",bars(by("city")))+`<p class="small muted">Example data.</p>`},
+  legal(db){return panel("Requests with legal deadlines",table(["Ref","Type","From","Due","Status"],db.legal.map(l=>`<tr><td class="code">${l.id.replace("-"," ")}</td><td>${esc(l.type)}</td><td>${esc(l.from)}</td><td>${esc(l.due)}</td><td>${l.status==="open"?B("legaldone","Mark completed","ghost","data-id=\""+l.id+"\""):chip("good","Completed")}</td></tr>`)))},
+  audit(db){const p=pendingApprovals(db);
+    return (p.length?panel("Waiting for a second admin",table(["Ref","Action","On","Asked by","When",""],p.map(x=>`<tr><td class="code">${x.id.replace("-"," ")}</td><td>${esc(x.kind)}</td><td>${esc(x.target)}</td><td>${esc(x.by)}</td><td class="small">${esc(x.at)}</td><td>${B("approve",x.by===A.who?"You asked for this":"Approve","",(x.by===A.who?"disabled ":"")+"data-id=\""+x.id+"\"")}</td></tr>`))):"")+
+      panel("Every admin action",table(["Ref","Action","On","By","When","Status"],db.audit.map(x=>`<tr><td class="code">${x.id.replace("-"," ")}</td><td>${esc(x.kind)}</td><td>${esc(x.target)}</td><td>${esc(x.by)}${x.approvedBy?`<div class="small muted">approved by ${esc(x.approvedBy)}</div>`:""}</td><td class="small">${esc(x.at)}</td><td>${x.status==="done"?chip("good","Done"):chip("wait","Awaiting approval")}</td></tr>`)))},
+  team(db){return panel("Admin roles",table(["Person","Role","Can open"],db.staff.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.role)}</td><td class="small">${ROLES[s.role].map(k=>SECTIONS[k]).join(", ")}</td></tr>`))+`<div class="pb small muted">Refunds, payment splits and suspensions always need a second admin. Nobody approves their own request.</div>`)}
+};
+function segForm(){const s=A.seg,o=(k,opts)=>`<select data-bind="seg.${k}">${opts.map(([v,l])=>`<option value="${v}" ${s[k]===v?"selected":""}>${l}</option>`).join("")}</select>`;const db=DB();
+  const cities=[...new Set(db.businesses.map(b=>b.city))];
+  return `<div class="form"><label class="f">Selling to${o("model",[["","Anyone"],["B2B","B2B"],["D2C","D2C"]])}</label><label class="f">City${o("city",[["","Any city"],...cities.map(c=>[c,c])])}</label><label class="f">Plan${o("plan",[["","Any plan"],["free","Free"],["pro","Pro"],["business","Business"]])}</label><label class="f">Verified${o("verified",[["","Either"],["yes","Verified"],["no","Not verified"]])}</label></div>`}
+function listForm(db,key){const l=A[key].list;return `<div class="form">${db.businesses.map(b=>`<label class="f" style="display:flex;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" data-pick="${key}" value="${b.key}" ${l.includes(b.key)?"checked":""}>${esc(b.name)}</label>`).join("")}</div>`}
+
+/* ===== handlers ===== */
+const H={
+  nav:e=>{A.section=e.dataset.k;A.sel=null;render()},
+  sel:e=>{A.sel=e.dataset.k;if(e.dataset.go)A.section=e.dataset.go;render()},
+  suspend:e=>doAct("suspend",e.dataset.k), unsuspend:e=>doAct("unsuspend",e.dataset.k), reverify:e=>doAct("reverify",e.dataset.k),
+  approve:e=>approve(e.dataset.id,A.who),
+  vpass:e=>{write(a=>{a.verifyQueue.find(v=>v.id===e.dataset.id).status="approved"});doAct("verify-approve",e.dataset.id)},
+  vfail:e=>{write(a=>{a.verifyQueue.find(v=>v.id===e.dataset.id).status="rejected"});doAct("verify-reject",e.dataset.id)},
+  askaccess:e=>{write(a=>{a.tickets.find(t=>t.id===e.dataset.id).notes.push({by:A.role,at:now(),text:"Asked the user to share this chat with support."})});toast("Request sent to the user")},
+  treply:e=>{const v=document.getElementById("reply").value.trim();if(!v){toast("Write a reply first");return}write(a=>{a.tickets.find(t=>t.id===e.dataset.id).notes.push({by:A.role,at:now(),text:v})});toast("Reply sent")},
+  tclose:e=>{write(a=>{a.tickets.find(t=>t.id===e.dataset.id).status="closed"});doAct("close-ticket",e.dataset.id)},
+  release:e=>doAct("release",e.dataset.id),
+  refund:e=>doAct("refund",e.dataset.id), split:e=>doAct("split",e.dataset.id,{buyerPct:60}),
+  applyft:()=>{const f=A.ft,db=DB(),keys=f.target==="segment"?db.businesses.filter(b=>matches(b,A.seg)).map(b=>b.key):f.list;const val=/^\d+$/.test(f.value)?+f.value:f.value;
+    write(a=>{a.flags=a.flags||{};keys.forEach(k=>{a.flags[k]={...(a.flags[k]||{}),[f.key]:val}})});doAct("override",keys.join(", "),{[f.key]:val})},
+  retry:e=>{write(a=>{const b=a.billing.find(x=>x.biz===e.dataset.k);b.status="paid"});doAct("retry-billing",e.dataset.k)},
+  adok:e=>{write(a=>{a.ads.find(x=>x.id===e.dataset.id).status="live"});doAct("ad-approve",e.dataset.id)},
+  adno:e=>{write(a=>{a.ads.find(x=>x.id===e.dataset.id).status="rejected"});doAct("ad-reject",e.dataset.id)},
+  sendbc:()=>sendBroadcast(false), schedbc:()=>sendBroadcast(true),
+  mdok:e=>{write(a=>{a.moderation.find(x=>x.id===e.dataset.id).status="allowed"});doAct("listing-allow",e.dataset.id)},
+  mdno:e=>{write(a=>{a.moderation.find(x=>x.id===e.dataset.id).status="removed"});doAct("listing-remove",e.dataset.id)},
+  legaldone:e=>{write(a=>{a.legal.find(x=>x.id===e.dataset.id).status="done"});doAct("legal-complete",e.dataset.id)},
+  reset:()=>{BOCStore.reset();A.sel=null;render();toast("Demo reset")}
+};
+function sendBroadcast(later){const b=A.bc,db=DB();const seg=b.target==="segment"?{...A.seg}:{list:[...b.list]};const n=b.target==="segment"?segCount(db,A.seg):b.list.length;let id;
+  write(a=>{id="BC-"+String(a.broadcasts.length+8).padStart(4,"0");a.broadcasts.unshift({id,title:b.title,body:b.body,seg,channel:b.channel,sent:later?0:n,read:0,status:later?"scheduled":"sent",at:later?"tomorrow 9 am":"today"})});
+  doAct("broadcast",id,{reach:n});A.bc={...A.bc,title:"",body:"",list:[]};render()}
+document.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(el&&!el.disabled&&H[el.dataset.act]){e.preventDefault();H[el.dataset.act](el)}});
+document.addEventListener("input",e=>{const t=e.target;if(t.id==="q"){A.q=t.value;render();const q=document.getElementById("q");q.focus();q.setSelectionRange(q.value.length,q.value.length);return}
+  if(t.dataset.bind){const[o,k]=t.dataset.bind.split(".");A[o][k]=t.value;render()}
+  if(t.dataset.pick){const l=A[t.dataset.pick].list,v=t.value;if(t.checked)l.includes(v)||l.push(v);else l.splice(l.indexOf(v),1);render()}});
+document.addEventListener("change",e=>{if(e.target.id==="role"){A.who=e.target.value;A.role=DB().staff.find(s=>s.name===A.who).role;if(!ROLES[A.role].includes(A.section))A.section=ROLES[A.role][0];render()}});
+
+/* ===== render ===== */
+function counts(db){return{verify:db.verifyQueue.filter(v=>v.status==="open").length,support:db.tickets.filter(t=>t.status==="open").length,disputes:db.disputes.filter(d=>d.status==="open").length,ads:db.ads.filter(a=>a.status==="pending").length,moderation:db.moderation.filter(m=>m.status==="open").length,fraud:db.businesses.filter(b=>b.flags&&b.status!=="suspended").length,audit:pendingApprovals(db).length,legal:db.legal.filter(l=>l.status==="open").length}}
+function render(){const db=DB(),c=counts(db),allowed=ROLES[A.role];if(!allowed.includes(A.section))A.section=allowed[0];
+  document.getElementById("nav").innerHTML=allowed.map(k=>`<button class="${A.section===k?"on":""}" data-act="nav" data-k="${k}" ${A.section===k?'aria-current="page"':""}><span>${SECTIONS[k]}</span>${c[k]!=null?`<span class="cnt ${c[k]?"":"z"}">${c[k]}</span>`:""}</button>`).join("");
+  const active=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.bind;
+  document.getElementById("main").innerHTML=`<div class="top"><div><h1>${SECTIONS[A.section]}</h1><p>BOC team console. Every action is logged. Example data.</p></div><div class="row"><label class="role" for="role">Signed in as<select id="role">${db.staff.map(s=>`<option value="${esc(s.name)}" ${A.who===s.name?"selected":""}>${esc(s.name)} · ${esc(s.role)}</option>`).join("")}</select></label>${B("reset","Reset demo","ghost")}<a href="index.html">Open the app</a></div></div>`+V[A.section](db);
+  if(active){const el=document.querySelector(`[data-bind="${active}"]`);if(el){el.focus();if(el.setSelectionRange&&el.value!=null)try{el.setSelectionRange(el.value.length,el.value.length)}catch(e){}}}}
+BOCStore.subscribe(()=>render());
+render();
+</script>
+</body>
+</html>

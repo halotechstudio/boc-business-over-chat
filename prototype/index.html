@@ -1,0 +1,1012 @@
+<title>BOC Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@300;400;500;600&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap">
+<style>
+/* Layout: guide column + one phone running the whole app; at phone width the app fills the screen and the guide follows. */
+:root{
+  --ground:#FBFAF7; --card:#FFFFFF; --sunk:#F1EEE8; --line:#E5E0D6; --ink:#1A1714; --ink2:#5F584E;
+  --tint:#2B3A8C; --tint-ink:#FFFFFF; --tint-soft:#E3E6F4;
+  --wait:#E8A317; --wait-ink:#1A1714; --wait-soft:#FBEFD2;
+  --good:#2E7D4F; --good-soft:#DCEFE3; --bad:#B8322A; --bad-soft:#F7DEDA;
+  --mute:#8A8275; --bubble-me:#E3E6F4; --bubble-them:#FFFFFF; --chatbg:#F4F1EB; --frame:#24211C; --scrim:rgba(20,18,15,.48);
+  --f-ui:Roboto,system-ui,-apple-system,"Segoe UI",sans-serif; --f-code:"Barlow Condensed","Roboto Condensed",Roboto,sans-serif; --f-num:"Roboto Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14130F; --card:#1D1B17; --sunk:#27241F; --line:#36322B; --ink:#F2EEE6; --ink2:#B1A99B;
+  --tint:#9EAAF4; --tint-ink:#121630; --tint-soft:#272D4D; --wait:#F0B53A; --wait-ink:#1A1714; --wait-soft:#3A2E12;
+  --good:#5BC48A; --good-soft:#173325; --bad:#F07A6E; --bad-soft:#3D1C18; --mute:#8F887B;
+  --bubble-me:#272D4D; --bubble-them:#24221D; --chatbg:#171612; --frame:#000000; --scrim:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ground:#14130F; --card:#1D1B17; --sunk:#27241F; --line:#36322B; --ink:#F2EEE6; --ink2:#B1A99B;
+  --tint:#9EAAF4; --tint-ink:#121630; --tint-soft:#272D4D; --wait:#F0B53A; --wait-ink:#1A1714; --wait-soft:#3A2E12;
+  --good:#5BC48A; --good-soft:#173325; --bad:#F07A6E; --bad-soft:#3D1C18; --mute:#8F887B;
+  --bubble-me:#272D4D; --bubble-them:#24221D; --chatbg:#171612; --frame:#000000; --scrim:rgba(0,0,0,.6); color-scheme:dark}
+*{box-sizing:border-box}
+::selection{background:var(--wait);color:var(--wait-ink)}
+body{background:var(--ground);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+input,textarea,select{font:inherit;color:var(--ink);caret-color:var(--tint)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.code{font-family:var(--f-code);font-weight:700;letter-spacing:.01em}
+svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.s{width:16px;height:16px}
+
+/* guide */
+.wrap{display:flex;gap:40px;justify-content:center;align-items:flex-start;max-width:1140px;margin:0 auto}
+.guide{flex:1 1 380px;max-width:460px;min-width:0}
+.guide h1{font-size:34px;line-height:1.05;margin:0 0 10px;letter-spacing:-.02em;text-wrap:balance}
+.guide .lede{color:var(--ink2);margin:0 0 22px;max-width:60ch}
+.ctl{display:grid;gap:10px;margin-bottom:22px}
+.ctl label{font-size:12px;font-weight:700;color:var(--ink2);letter-spacing:.04em;text-transform:uppercase}
+.seg{display:flex;background:var(--sunk);border-radius:12px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 6px;font-weight:500;font-size:13px;color:var(--ink2);min-height:36px}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.flows{display:grid;gap:2px;border-top:1px solid var(--line)}
+.flow{display:grid;grid-template-columns:36px 1fr 20px;gap:12px;align-items:center;border:0;border-bottom:1px solid var(--line);background:none;padding:12px 4px;text-align:left}
+.flow .ft{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:#fff}
+.flow h3{margin:0;font-size:14.5px;font-weight:700}
+.flow p{margin:2px 0 0;color:var(--ink2);font-size:12.5px}
+.flow:hover h3{color:var(--tint)}
+.foot{color:var(--mute);font-size:12px;margin-top:16px}
+
+/* phone */
+.phone{flex:0 0 auto;width:392px;height:min(830px,calc(100dvh - 56px));min-height:660px;border:10px solid var(--frame);border-radius:44px;overflow:hidden;position:sticky;top:28px;background:var(--ground);box-shadow:0 30px 60px -28px rgba(26,23,20,.5)}
+@media (max-width:880px){.wrap{flex-direction:column-reverse;align-items:stretch}.guide{max-width:none}.phone{position:relative;top:0;width:100%;max-width:430px;margin:0 auto}}
+@media (max-width:480px){body{padding-block:0}.phone{border:0;border-radius:0;box-shadow:none;max-width:none;height:100dvh;min-height:0;width:auto;margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)))}.guide{padding-block:24px}}
+#app{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--ground);overflow:hidden}
+.phone{position:sticky}.phone>#app{position:absolute}
+.status{height:34px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 22px;font-size:12.5px;font-weight:700;color:var(--ink)}
+.os-ios .status{height:44px;padding-top:6px}
+
+/* headers */
+.hdr{display:flex;align-items:center;gap:6px;padding:4px 8px 6px;min-height:56px;flex:none;background:var(--ground)}
+.hdr .ttl{flex:1;min-width:0}
+.hdr h2{margin:0;font-size:20px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr .sub{font-size:12px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.os-ios .hdr{min-height:44px;padding:2px 8px}
+.os-ios .hdr .ttl{text-align:center}
+.os-ios .hdr h2{font-size:17px;font-weight:700}
+.os-ios .hdr.convo .ttl{text-align:left}
+.big{padding:4px 16px 8px;display:flex;align-items:flex-end;gap:8px;flex:none}
+.big h1{margin:0;flex:1;font-size:28px;font-weight:500;letter-spacing:-.01em}
+.os-ios .big h1{font-size:34px;font-weight:700;letter-spacing:-.02em}
+.ib{min-width:44px;height:44px;border-radius:22px;border:0;background:none;display:inline-flex;align-items:center;justify-content:center;gap:2px;color:var(--ink);padding:0 10px}
+.os-android .ib{min-width:48px;height:48px}
+.ib:hover{background:var(--sunk)}
+.os-ios .ib.back{color:var(--tint);padding:0 6px;font-size:17px}
+.av{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-weight:700;font-size:15px;flex:none;color:#fff}
+.vb{color:var(--tint);display:inline-flex;vertical-align:-3px}
+.body{flex:1;overflow-y:auto;min-height:0;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+
+/* nav */
+.nav{flex:none;display:grid;border-top:1px solid var(--line);background:var(--card);padding-bottom:max(6px,env(safe-area-inset-bottom,0px))}
+.nav button{border:0;background:none;display:grid;justify-items:center;gap:4px;padding:10px 0 8px;font-size:12px;font-weight:500;color:var(--ink2);position:relative;min-height:64px}
+.os-android .nav button .pill{width:56px;height:30px;border-radius:15px;display:grid;place-items:center}
+.os-android .nav button.on .pill{background:var(--tint-soft);color:var(--tint)}
+.os-android .nav button.on{color:var(--ink);font-weight:700}
+.os-ios .nav{background:var(--card)}
+.os-ios .nav button{font-size:10.5px;gap:2px;padding:7px 0 4px;min-height:52px}
+.os-ios .nav button.on{color:var(--tint)}
+.os-ios .nav .pill{display:grid;place-items:center;height:26px}
+.nav .dot{position:absolute;top:6px;left:calc(50% + 6px);background:var(--bad);color:#fff;font-size:10.5px;border-radius:9px;padding:0 5px;line-height:16px;font-family:var(--f-num)}
+.fab{position:absolute;right:16px;bottom:96px;width:56px;height:56px;border-radius:16px;border:0;background:var(--tint);color:var(--tint-ink);display:grid;place-items:center;box-shadow:0 6px 14px -4px rgba(26,23,20,.4);z-index:3}
+
+/* lists, chips */
+.fchips{display:flex;gap:8px;padding:6px 16px 10px;overflow-x:auto;scrollbar-width:none;flex:none}
+.fc{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:0 12px;height:32px;font-size:13px;font-weight:500;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.os-ios .fc{border-radius:16px}
+.fc.on{background:var(--tint-soft);border-color:var(--tint-soft);color:var(--tint);font-weight:700}
+.search{margin:0 16px 4px;display:flex;align-items:center;gap:8px;background:var(--sunk);border-radius:24px;padding:0 14px;height:44px;color:var(--ink2);flex:none}
+.os-ios .search{border-radius:10px;height:38px}
+.search input{border:0;background:transparent;flex:1;min-width:0;outline:none}
+.row{display:flex;gap:12px;align-items:center;padding:10px 16px;border:0;background:none;width:100%;text-align:left;min-height:64px}
+.row+.row{border-top:1px solid var(--line)}
+.row:hover{background:var(--sunk)}
+.row .mid{flex:1;min-width:0}
+.row .t{font-weight:700;font-size:15px;display:flex;gap:4px;align-items:center;min-width:0}
+.row .t span.n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{color:var(--ink2);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .r{display:grid;justify-items:end;gap:4px;font-size:12px;color:var(--ink2);flex:none}
+.badge{background:var(--tint);color:var(--tint-ink);border-radius:10px;font-size:11px;min-width:20px;text-align:center;padding:1px 6px;font-family:var(--f-num)}
+.dots{display:flex;gap:3px;margin-top:5px}
+.dots i{display:block;width:16px;height:5px;border-radius:2px}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap;display:inline-block}
+.tg-wait{background:var(--wait-soft);color:var(--ink)}.tg-good{background:var(--good-soft);color:var(--good)}.tg-bad{background:var(--bad-soft);color:var(--bad)}.tg-tint{background:var(--tint-soft);color:var(--tint)}.tg-mute{background:var(--sunk);color:var(--ink2)}
+.zero{background:var(--sunk);color:var(--ink2)}
+.t-wait{background:var(--wait);color:var(--wait-ink)}.t-good{background:#2E7D4F;color:#fff}.t-bad{background:#B8322A;color:#fff}.t-tint{background:#2B3A8C;color:#fff}.t-mute{background:#7A7266;color:#fff}
+
+/* waiting bar + strip (signature) */
+.waitbar{margin:2px 16px 10px;background:var(--wait);color:var(--wait-ink);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;border:0;text-align:left;width:calc(100% - 32px)}
+.waitbar b{font-family:var(--f-code);font-size:24px;line-height:1;display:block;font-weight:700}
+.waitbar span{font-size:12.5px;font-weight:500}
+.strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:0 16px 12px}
+.chip{border:0;border-radius:8px;padding:8px 8px 6px;min-height:58px;display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-width:0}
+.chip .code{font-size:19px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip small{font-size:10.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hstrip{display:flex;gap:6px;padding:0 12px 8px;overflow-x:auto;scrollbar-width:none;flex:none;background:var(--ground);border-bottom:1px solid var(--line)}
+.hstrip .chip{min-height:40px;min-width:84px;padding:6px 8px}
+.hstrip .chip .code{font-size:16px}
+
+/* chat */
+.chat{background:var(--chatbg);padding:12px 10px 16px;display:flex;flex-direction:column;gap:6px;min-height:100%}
+.m{max-width:84%;padding:8px 11px 6px;border-radius:14px;background:var(--bubble-them);align-self:flex-start;min-width:0;border:1px solid var(--line)}
+.m.me{align-self:flex-end;background:var(--bubble-me);border-color:transparent}
+.m .lb{font-size:11px;font-weight:700;color:var(--tint);margin-bottom:2px;display:flex;align-items:center;gap:4px}
+.m .lb.auto{color:var(--ink2)}
+.m .time{font-size:10.5px;color:var(--ink2);text-align:right;margin-top:2px}
+.sys{align-self:center;color:var(--ink2);font-size:12px;text-align:center;max-width:90%;padding:2px 8px}
+.m.card{padding:0;width:86%;max-width:86%;overflow:hidden}
+.ch{display:flex;justify-content:space-between;align-items:flex-end;gap:8px;padding:10px 12px 8px}
+.ch .code{font-size:22px;line-height:1}
+.ch small{font-size:11.5px;font-weight:700;text-align:right}
+.cd{padding:10px 12px 8px}
+.cd .k{font-size:11.5px;font-weight:700;color:var(--ink2);margin-bottom:4px}
+.cd .ttl{font-weight:700;font-size:15px;margin-bottom:4px}
+.li{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:2px 0}
+.li span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tot{border-top:1px dashed var(--line);margin-top:6px;padding-top:6px}
+.tot .li:last-child{font-weight:700;font-size:14px}
+.meta{font-size:12px;color:var(--ink2);margin-top:6px}
+.acts{display:flex;border-top:1px solid var(--line)}
+.acts button{flex:1;border:0;background:none;padding:12px 6px;font-weight:700;color:var(--tint);font-size:13.5px;min-height:46px}
+.acts button+button{border-left:1px solid var(--line)}
+.acts button.pri{background:var(--tint);color:var(--tint-ink)}
+.acts button.pay{background:var(--wait);color:var(--wait-ink)}
+.note{border-top:1px solid var(--line);padding:9px 12px;font-size:12.5px;color:var(--ink2)}
+.track{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;margin-top:8px}
+.track i{height:6px;border-radius:2px;background:var(--line)}
+.track i.on{background:#2E7D4F}
+.pblock{height:110px;display:flex;align-items:flex-end;justify-content:space-between;padding:10px 12px;color:#fff}
+.pblock .code{font-size:18px}
+.typing{align-self:flex-start;color:var(--ink2);font-size:12px;padding:4px 10px}
+.banner{margin:8px 10px 0;border-radius:12px;padding:10px 12px;font-size:12.5px;display:flex;gap:10px;align-items:flex-start;border:0;text-align:left;width:calc(100% - 20px)}
+.banner b{display:block;font-size:13px}
+.banner.ok{background:var(--good-soft);color:var(--ink)}.banner.ok svg{color:var(--good)}
+.banner.warn{background:var(--bad-soft);color:var(--ink)}.banner.warn svg{color:var(--bad)}
+.quick{display:flex;gap:6px;padding:6px 10px 0;overflow-x:auto;scrollbar-width:none;flex:none}
+.composer{display:flex;gap:8px;align-items:center;padding:8px 10px;border-top:1px solid var(--line);background:var(--card);position:relative;flex:none;padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}
+.composer input{flex:1;min-width:0;border:1px solid var(--line);background:var(--sunk);border-radius:22px;padding:0 14px;height:44px;outline:none}
+.round{width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;background:var(--tint);color:var(--tint-ink);flex:none}
+.round.ghost{background:var(--tint-soft);color:var(--tint)}
+.qr{position:absolute;left:10px;right:10px;bottom:62px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);overflow:hidden}
+.qr button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-bottom:1px solid var(--line)}
+.qr button b{color:var(--tint);margin-right:6px}
+.suggest{margin:0 10px 6px;display:flex;gap:8px;align-items:center;background:var(--tint-soft);border-radius:12px;padding:8px 10px;font-size:12.5px;flex:none}
+.suggest p{margin:0;flex:1;min-width:0}
+
+/* sections */
+.sec{padding:14px 16px}
+.sec h4{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--ink2);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card);min-width:0}
+.tile .l{font-size:12px;color:var(--ink2);font-weight:500}
+.tile .v{font-size:19px;font-weight:700;margin-top:2px}
+.tool{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px 6px 10px;display:grid;justify-items:center;gap:6px;font-size:12px;font-weight:500;text-align:center;min-height:86px}
+.tool .ti{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff}
+.tool:hover{border-color:var(--tint)}
+.empty{color:var(--ink2);font-size:13px;padding:6px 0}
+.item{display:flex;gap:12px;align-items:center;padding:10px 0;border:0;border-bottom:1px solid var(--line);width:100%;background:none;text-align:left;min-height:56px}
+.item .mid{flex:1;min-width:0}
+.item .t{font-weight:700;font-size:14px}
+.item .s{font-size:12.5px;color:var(--ink2)}
+.btn{border:0;border-radius:20px;background:var(--tint);color:var(--tint-ink);font-weight:700;padding:0 18px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;white-space:nowrap}
+.os-ios .btn{border-radius:12px}
+.btn.tonal{background:var(--tint-soft);color:var(--tint)}
+.btn.out{background:none;border:1px solid var(--line);color:var(--tint)}
+.btn.waitb{background:var(--wait);color:var(--wait-ink)}
+.btn.full{width:100%;min-height:50px;font-size:15px}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.mini{width:40px;height:40px;border-radius:9px;flex:none;display:grid;place-items:center;color:#fff}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.kv span:first-child{color:var(--ink2)}
+.kv span:last-child{text-align:right;min-width:0}
+.bars{display:flex;align-items:flex-end;gap:10px;height:120px;border-bottom:1px solid var(--line)}
+.bars div{flex:1;display:grid;justify-items:center;gap:4px;align-self:stretch;align-content:end}
+.bars span{width:100%;border-radius:5px 5px 0 0;background:var(--tint-soft)}
+.bars div.cur span{background:var(--tint)}
+.bars small,.blab small{font-size:10.5px;color:var(--ink2);font-family:var(--f-num)}
+.blab{display:flex;gap:10px}.blab small{flex:1;text-align:center;padding-top:4px}
+.tg{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.tg .mid{flex:1;min-width:0}
+.tg b{font-size:14px}
+.tg p{margin:2px 0 0;color:var(--ink2);font-size:12.5px}
+.sw{width:52px;height:32px;border-radius:16px;border:2px solid var(--mute);background:var(--sunk);position:relative;flex:none;padding:0}
+.sw::after{content:"";position:absolute;top:6px;left:6px;width:16px;height:16px;border-radius:50%;background:var(--mute);transition:all .18s cubic-bezier(.2,.8,.2,1)}
+.sw.on{background:var(--tint);border-color:var(--tint)}
+.sw.on::after{left:24px;top:2px;width:24px;height:24px;background:var(--tint-ink)}
+.os-ios .sw{width:51px;height:31px;border:0;background:var(--line)}
+.os-ios .sw::after{top:2px;left:2px;width:27px;height:27px;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25)}
+.os-ios .sw.on{background:#34A853}
+.os-ios .sw.on::after{left:22px;top:2px;width:27px;height:27px;background:#fff}
+@media (prefers-reduced-motion:reduce){.sw::after{transition:none}}
+.stars{display:flex;gap:4px;color:var(--wait)}
+.stars button{border:0;background:none;padding:4px;color:var(--line)}
+.stars button.on{color:var(--wait)}
+.stars button.on svg{fill:currentColor}
+.ver{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.ver .vi{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none}
+.ver .vi.ok{background:var(--good-soft);color:var(--good)}.ver .vi.no{background:var(--bad-soft);color:var(--bad)}
+.ver b{font-size:13.5px;display:block}
+.ver span{font-size:12.5px;color:var(--ink2)}
+.hero{padding:16px 16px 14px;color:#fff}
+.hero h2{margin:8px 0 2px;font-size:24px;line-height:1.15}
+.hero p{margin:0;opacity:.92;font-size:13px}
+
+/* forms */
+.field{display:grid;gap:4px;margin-bottom:14px}
+.field label{font-size:12.5px;font-weight:700;color:var(--ink2)}
+.field input,.field textarea{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:0 12px;height:48px;outline:none;width:100%}
+.field textarea{height:72px;padding:10px 12px;resize:none}
+.os-ios .field input,.os-ios .field textarea{background:var(--sunk);border-color:transparent;border-radius:10px}
+.field input:focus,.field textarea:focus{border-color:var(--tint)}
+.field .hint{font-size:12px;color:var(--ink2)}
+.lab{font-size:12.5px;font-weight:700;color:var(--ink2);margin:14px 0 8px}
+.wchips{display:flex;flex-wrap:wrap;gap:8px}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--card);font-weight:700;display:grid;place-items:center;padding:0}
+.step b{min-width:26px;text-align:center;font-family:var(--f-num)}
+.prog{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px 16px 0}
+.prog i{height:6px;border-radius:2px;background:var(--line)}
+.prog i.on{background:var(--tint)}
+.ob{padding:8px 20px 20px}
+.ob h1{font-size:26px;line-height:1.15;margin:8px 0 6px;letter-spacing:-.01em}
+.ob p.lead{color:var(--ink2);margin:0 0 18px}
+.choice{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:14px;background:var(--card);width:100%;text-align:left;margin-bottom:10px}
+.choice.on{border-color:var(--tint);background:var(--tint-soft)}
+.choice b{display:block;font-size:15px}
+.choice span{font-size:12.5px;color:var(--ink2)}
+.fetched{border-radius:12px;background:var(--good-soft);padding:10px 12px;font-size:12.5px;margin:-4px 0 14px}
+.fetched b{display:block;font-size:13px}
+.otp{display:flex;gap:8px;margin:8px 0 18px}
+.otp span{width:44px;height:52px;border-radius:10px;border:1.5px solid var(--line);display:grid;place-items:center;font-family:var(--f-num);font-size:20px;background:var(--card)}
+.otp span.f{border-color:var(--tint)}
+.ob-foot{padding:12px 20px max(16px,env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--ground);flex:none}
+.welcome{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:20px}
+.wgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:24px}
+.wgrid .chip{min-height:64px}
+
+/* sheet + toast */
+.scrim{position:absolute;inset:0;background:var(--scrim);display:flex;align-items:flex-end;z-index:8}
+.sheet{background:var(--card);width:100%;max-height:90%;border-radius:24px 24px 0 0;display:flex;flex-direction:column}
+.os-ios .sheet{border-radius:14px 14px 0 0}
+.handle{width:36px;height:4px;border-radius:2px;background:var(--line);margin:8px auto 0;flex:none}
+.sh{display:flex;align-items:center;gap:8px;padding:8px 8px 4px 20px;flex:none}
+.sh h3{margin:0;font-size:19px;flex:1;font-weight:700}
+.sb{overflow-y:auto;padding:0 20px 10px;min-height:0}
+.sf{padding:12px 20px max(16px,env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;flex:none}
+.sf .sum{min-width:0}
+.sf .btn{flex:1;min-height:50px}
+.doc{border:1px solid var(--line);border-radius:12px;padding:12px;font-size:13px;background:var(--sunk)}
+.doc p{margin:0 0 6px}
+.opt{display:flex;gap:12px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:12px;width:100%;background:var(--card);text-align:left;margin-bottom:8px}
+.opt.on{border-color:var(--tint);background:var(--tint-soft)}
+.opt .mid{flex:1;min-width:0}
+.opt b{display:block}
+.opt span{font-size:12.5px;color:var(--ink2)}
+.timeline{display:grid;gap:0;margin:6px 0}
+.timeline div{display:grid;grid-template-columns:20px 1fr;gap:10px;padding-bottom:14px;position:relative}
+.timeline div::before{content:"";position:absolute;left:9px;top:14px;bottom:0;width:2px;background:var(--line)}
+.timeline div:last-child::before{display:none}
+.timeline i{width:12px;height:12px;border-radius:3px;background:var(--line);margin:3px 0 0 4px;position:relative;z-index:1}
+.timeline .on i{background:#2E7D4F}
+.timeline b{font-size:13.5px;display:block}
+.timeline span{font-size:12px;color:var(--ink2)}
+.done{display:grid;justify-items:center;text-align:center;gap:8px;padding:20px 0}
+.done .ok{width:64px;height:64px;border-radius:16px;background:#2E7D4F;color:#fff;display:grid;place-items:center}
+.toast{position:absolute;left:16px;right:16px;bottom:92px;background:#2A2722;color:#F2EEE6;padding:12px 16px;border-radius:6px;font-size:13.5px;z-index:9;box-shadow:0 8px 20px -6px rgba(0,0,0,.4)}
+.os-ios .toast{bottom:auto;top:52px;border-radius:14px;background:var(--card);color:var(--ink);border:1px solid var(--line);text-align:center;font-weight:500}
+</style>
+<link rel="stylesheet" href="calm.css">
+
+<div class="wrap">
+  <aside class="guide">
+    <h1>BOC: Business Over Chat</h1>
+    <p class="lede">A working simulation of one app where Indian businesses sell, buy, ship, get paid and sign, and where shoppers can see exactly who they are dealing with. Every reply from the other side is simulated, and all names, numbers and businesses are example data.</p>
+    <div class="ctl">
+      <label id="lv">View the app as</label>
+      <div class="seg" role="group" aria-labelledby="lv" id="seg-view"></div>
+      <label id="lo">Phone</label>
+      <div class="seg" role="group" aria-labelledby="lo" id="seg-os"></div>
+    </div>
+    <div class="flows" id="flows"></div>
+    <p class="foot">Tax rates, courier prices and fees shown here are examples, not real offers.</p>
+  </aside>
+  <div class="phone"><div id="app" class="os-android"></div></div>
+</div>
+
+<script>
+/* ===== icons (authored, one stroke weight) ===== */
+const IC={
+ chat:'<path d="M20.5 11.5a8 8 0 0 1-11.7 7.1L4 20l1.3-4.4A8 8 0 1 1 20.5 11.5z"/>',
+ pending:'<path d="M4 13h4.5l1.5 2.5h4l1.5-2.5H20"/><path d="M6 4h12l2 9v6H4v-6z"/>',
+ store:'<path d="M4 9.5 5.5 4h13L20 9.5"/><path d="M4 9.5h16v.5a2.7 2.7 0 0 1-5.3 0 2.7 2.7 0 0 1-5.4 0A2.7 2.7 0 0 1 4 10z"/><path d="M5 12.5V20h14v-7.5M10 20v-5h4v5"/>',
+ menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+ arrow:'<path d="M19 12H5M11 6l-6 6 6 6"/>', chev:'<path d="M15 5l-7 7 7 7"/>', chevr:'<path d="M9 5l7 7-7 7"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>', send:'<path d="M4.5 12 20 4.5 15 20l-3-6.5z"/><path d="M12 13.5 20 4.5"/>',
+ search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>', close:'<path d="M6 6l12 12M18 6 6 18"/>',
+ check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>', info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.5"/>',
+ shield:'<path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5V6z"/><path d="m8.8 12 2.2 2.2 4.3-4.4"/>',
+ star:'<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+ truck:'<path d="M3 6.5h11v9.5H3zM14 10h3.8l3.2 3.2V16h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+ box:'<path d="m3.5 7.5 8.5-4 8.5 4v9l-8.5 4-8.5-4z"/><path d="m3.5 7.5 8.5 4 8.5-4M12 11.5v9"/>',
+ card:'<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
+ spark:'<path d="M12 3.5 13.8 9 19.5 11 13.8 13 12 18.5 10.2 13 4.5 11 10.2 9z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+ user:'<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>',
+ file:'<path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14 3v5h5M9 13h7M9 16.5h5"/>',
+ pen:'<path d="M4 20h4L19.5 8.5l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+ compass:'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>',
+ bag:'<path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+ bank:'<path d="M3 10 12 4l9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20.5h18"/>',
+ pin:'<path d="M12 21s-6.5-6-6.5-11.5a6.5 6.5 0 0 1 13 0C18.5 15 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/>',
+ tag:'<path d="M3.5 12V4h8l9 9-8 8z"/><circle cx="8" cy="8.5" r="1.2"/>',
+ chart:'<path d="M4 20V11M10 20V5M16 20v-7M2.5 20.5h19"/>',
+ users:'<circle cx="9" cy="8.5" r="3.4"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 5a3.4 3.4 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-3.5-5.8"/>',
+ mega:'<path d="M3.5 10v4h3.5l8 5V5l-8 5z"/><path d="M18 9.5a3.5 3.5 0 0 1 0 5"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>',
+ bolt:'<path d="M13 2.5 4.5 14H11l-1 7.5L19.5 10H13z"/>', alert:'<path d="M12 3.5 21.5 20h-19z"/><path d="M12 10v4.5M12 17.2v.3"/>',
+ phone:'<path d="M5.5 3.5h3.5l1.8 4.6-2.3 1.4a11 11 0 0 0 6 6l1.4-2.3 4.6 1.8v3.5a2 2 0 0 1-2 2A16.5 16.5 0 0 1 3.5 5.5a2 2 0 0 1 2-2z"/>',
+ lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+ camera:'<path d="M3.5 7.5h4l2-3h5l2 3h4v12h-17z"/><circle cx="12" cy="13" r="3.6"/>',
+ swap:'<path d="M4 8h14l-3.5-3.5M20 16H6l3.5 3.5"/>', cart:'<path d="M3 4h2.2l2.3 11h10.5l2-8H6.3"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/>',
+ home:'<path d="M4 11 12 4l8 7v9H4z"/><path d="M10 20v-6h4v6"/>', wallet:'<path d="M4 7h15v12H4z"/><path d="M4 7l11-3v3M15.5 13h2"/>'
+};
+const ic=(n,cls="")=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n]||""}</svg>`;
+
+/* ===== data ===== */
+const PARTY=["#7A2E5C","#0F7C86","#C0562A","#4A5D23","#2E7D4F","#8A3FA0","#2B3A8C","#9A6B12","#5B4A8C","#A33A3A"];
+const S={
+  view:"owner", os:"android", stack:[{name:"tab"}], tab:"chats", filter:"All", q:"", sheet:null, toast:null, typing:{}, drafts:{},
+  payout:{held:18500,settled:243600,bank:"KBNK ••4821"},
+  rules:{disc:true,po:true},
+  auto:{greeting:true,away:false,awayMode:"Outside business hours",remind:true,reorder:true},
+  ai:{mode:"auto",know:{catalog:true,stock:true,hours:true,policy:true,faq:true},perm:{prices:true,cards:true,drafts:true,paylink:false},limit:25000,answered:14,handed:3},
+  greetingText:"Welcome to Shree Textiles! Ask about any saree or fabric, or tap Catalog to browse.",
+  awayText:"We are closed right now. We open at 10 am and will reply first thing.",
+  quick:[{k:"/hours",t:"We are open Mon–Sat, 10 am to 7 pm."},{k:"/thanks",t:"Thank you for your order! Tracking comes here as soon as it ships."},{k:"/pay",t:"You can pay from the invoice above by UPI or card. BOC holds it safely until delivery."},{k:"/moq",t:"Wholesale minimum is 5 rolls per fabric or 10 pieces per garment."}],
+  expenses:[{c:"Rent",a:45000,d:"1 Nov"},{c:"Salaries",a:118000,d:"1 Nov"},{c:"Transport",a:6400,d:"12 Nov"}],
+  months:[["Jun",612000],["Jul",574000],["Aug",698000],["Sep",742000],["Oct",913000],["Nov",486000]],
+  campaigns:[{name:"Festive silk preview",aud:"All customers",sent:214,read:171,click:48,orders:9,done:true}],
+  docs:{}, chats:[], ob:null
+};
+const BIZ={
+  st:{name:"Shree Textiles",color:"#7A2E5C",cat:"Sarees and fabrics · retail and wholesale",city:"Coimbatore, Tamil Nadu",legal:"Shree Textiles (proprietorship)",gstin:"33ABHFS4821K1Z6",udyam:"UDYAM-TN-03-0048213",since:"March 2024",orders:1240,rating:4.7,reviews:312,reply:"Usually replies within an hour",disputes:"0.4% of orders disputed",returns:"7-day returns on unused items",ships:"Ships across India",hours:"Mon–Sat, 10:00–19:00",upi:"shreetextiles@kbank",lv:{phone:1,gst:1,kyc:1,bank:1,udyam:1}},
+  qd:{name:"Quick Deals Store",color:"#6E675C",cat:"Phone accessories",city:"Not shared",since:"9 days ago",orders:0,rating:null,reviews:0,reply:"No reply history yet",lv:{phone:1}},
+  am:{name:"Annapurna Medicals",color:"#0F7C86",cat:"Pharmacy",city:"Kochi, Kerala",legal:"Annapurna Medicals LLP",gstin:"32AAGFA1123L1Z9",since:"January 2025",orders:4310,rating:4.8,reviews:902,reply:"Usually replies within 15 minutes",disputes:"0.1% of orders disputed",returns:"Returns on sealed items only",ships:"Delivers in Kochi",hours:"Daily, 8:00–22:00",lv:{phone:1,gst:1,kyc:1,bank:1}},
+  ms:{name:"Malabar Spice House",color:"#9A6B12",cat:"Spices and dry fruits",city:"Kozhikode, Kerala",legal:"Malabar Spice House",gstin:"32AKLPM7781C1ZQ",since:"June 2024",orders:2208,rating:4.6,reviews:540,reply:"Usually replies within 2 hours",disputes:"0.6% of orders disputed",returns:"No returns on food",ships:"Ships across India",hours:"Mon–Sat, 9:00–20:00",lv:{phone:1,gst:1,kyc:1,bank:1}},
+  kc:{name:"Kochi Cake Studio",color:"#A33A3A",cat:"Bakery, custom cakes",city:"Kochi, Kerala",legal:"Kochi Cake Studio",udyam:"UDYAM-KL-07-0112094",since:"August 2025",orders:316,rating:4.9,reviews:120,reply:"Usually replies within 30 minutes",disputes:"None",returns:"No returns on food",ships:"Delivers in Kochi",hours:"Daily, 10:00–21:00",lv:{phone:1,kyc:1,bank:1,udyam:1}}
+};
+const PRODUCTS=[
+  {id:"p1",name:"Kanjivaram Silk Saree",code:"KS MRN",hsn:"5007",cat:"Sarees",unit:"pc",price:18500,whole:15200,cost:12400,stock:12,reorder:5,color:"#7B1E3A",vars:["Maroon","Bottle green","Mustard"],vis:"Everyone",desc:"Handwoven pure silk with zari border, 6.3 m with blouse piece."},
+  {id:"p2",name:"Organic Cotton Fabric, 50 m roll",code:"OC NAT",hsn:"5208",cat:"Fabric",unit:"roll",price:6200,whole:5400,cost:4300,stock:40,reorder:15,color:"#8A7B5C",vars:["Natural","Bleached"],vis:"Everyone",desc:"GOTS-style organic cotton, 60 inch width."},
+  {id:"p3",name:"Linen Shirting, 30 m roll",code:"LN BLU",hsn:"5309",cat:"Fabric",unit:"roll",price:7800,whole:6900,cost:5600,stock:6,reorder:10,color:"#4A6B8A",vars:["Sky","Sand","White"],vis:"Wholesale buyers",desc:"60 lea linen for shirts, 58 inch width."},
+  {id:"p4",name:"Chanderi Dupatta",code:"CD PNK",hsn:"5007",cat:"Dupattas",unit:"pc",price:2400,whole:1850,cost:1300,stock:55,reorder:20,color:"#C06C84",vars:["Rose","Ivory","Teal"],vis:"Everyone",desc:"Silk-cotton Chanderi with gold buttis."},
+  {id:"p5",name:"Block-print Kurta Set",code:"BK TEA",hsn:"6211",cat:"Apparel",unit:"set",price:3200,whole:2550,cost:1900,stock:4,reorder:8,color:"#1F5F5B",vars:["S","M","L","XL"],vis:"Everyone",desc:"Hand block-printed cotton kurta with pants."},
+  {id:"p6",name:"Silk Thread Cones, box of 24",code:"TC VLT",hsn:"5004",cat:"Supplies",unit:"box",price:2600,whole:2200,cost:1750,stock:9,reorder:12,color:"#5B3A8C",vars:["Assorted"],vis:"Hidden",desc:"Spun silk thread for weaving and embroidery."}
+];
+S.products=PRODUCTS;
+const TEAM=[{n:"You",r:"Owner"},{n:"Ravi",r:"Sales"},{n:"Anita",r:"Accounts"},{n:"Deepak",r:"Warehouse"}];
+const TEMPLATES=[{t:"Wholesale supply agreement",c:["Monthly supply at agreed wholesale prices","Payment within 30 days of invoice","Price revision with 30 days notice","Quality claims within 7 days of delivery"]},
+  {t:"Non-disclosure agreement",c:["Designs and price lists stay confidential","Applies for the term plus 2 years","No sharing with third parties"]},
+  {t:"Job-work agreement",c:["Fabric supplied by Shree Textiles","Finished goods returned within 21 days","Rate per piece as per annexure","Wastage allowance 2%"]}];
+const COURIERS=[{id:"std",name:"Setu Logistics · Surface",eta:"4–5 days",fee:78},{id:"exp",name:"Vayu Express · Air",eta:"2 days",fee:142},{id:"self",name:"Deliver it yourself",eta:"You set the date",fee:0}];
+const STAGES=["Booked","Picked up","In transit","Out for delivery","Delivered"];
+const DIR=[{n:"Tiruppur Knit Exports",cat:"Fabric supplier",city:"Tiruppur",r:"4.7",k:"supplier"},{n:"Coastal Cargo Movers",cat:"Logistics",city:"Coimbatore",r:"4.5",k:"supplier"},{n:"PackRight Boxes",cat:"Packaging",city:"Erode",r:"4.4",k:"supplier"},{n:"Lakshmi Silks & Sarees",cat:"Retail store, buyer",city:"Madurai",r:"4.8",k:"b2b"}];
+
+let SEQ=220;
+const nid=p=>p+"-0"+(++SEQ);
+const money=n=>"₹"+Math.round(n).toLocaleString("en-IN");
+const now=()=>new Date().toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit"});
+const dayPlus=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toLocaleDateString("en-IN",{day:"numeric",month:"short"})};
+const P=id=>S.products.find(p=>p.id===id), C=id=>S.chats.find(c=>c.id===id), D=id=>S.docs[id];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const code=id=>id.replace("-"," ");
+const initials=n=>n.replace(/[^A-Za-z ]/g,"").split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+function totals(items,disc=0,ship=0){const sub=items.reduce((a,i)=>a+i.qty*i.price,0),d=sub*disc/100,tax=(sub-d)*0.05;return{sub,d,tax,ship,total:sub-d+tax+ship}}
+const docTotal=d=>d.items?totals(d.items,d.disc||0,d.shipFee||0).total:d.amount;
+const isBiz=()=>S.view!=="customer", side=()=>isBiz()?"biz":"cp", role=()=>S.view==="staff"?"staff":"owner";
+function addDoc(d){S.docs[d.id]=d;return d}
+function M(by,body,time,extra={}){return typeof body==="string"?{by,type:"text",text:body,time,...extra}:{by,time,...body,...extra}}
+function chat(o){S.chats.push({unread:0,unreadC:0,labels:[],assignee:null,msgs:[],...o})}
+
+/* seed */
+addDoc({id:"INV-0148",kind:"invoice",chat:"c2",items:[{pid:"p2",qty:10,price:5400},{pid:"p4",qty:30,price:1850}],disc:0,terms:"Net 30",due:dayPlus(5),status:"unpaid"});
+addDoc({id:"BILL-0061",kind:"bill",chat:"c3",amount:42000,ref:"PO-0139",due:dayPlus(7),status:"unpaid"});
+addDoc({id:"CON-0012",kind:"contract",chat:"c7",title:"Wholesale supply agreement",term:"12 months",clauses:TEMPLATES[0].c,signers:[{who:"Nisha Boutique",me:false,at:"Yesterday, 6:12 pm"},{who:"Shree Textiles",me:true,at:null}],status:"awaiting",fp:"a3f9 1c07 e2b4 9d58"});
+addDoc({id:"ORD-0201",kind:"order",chat:"c9",items:[{pid:"p4",qty:2,price:2400,v:"Rose"},{pid:"p5",qty:1,price:3200,v:"M"}],status:"accepted",pay:"held",method:"UPI",shipFee:78,addr:"Rohan Mehta, 7 Linking Road, Mumbai 400050"});
+addDoc({id:"ORD-0187",kind:"order",chat:"x2",items:[{pid:null,name:"Vitamin D3 60K, strip of 4",qty:2,price:168}],status:"completed",pay:"released",method:"UPI",shipFee:0,ext:true});
+
+chat({id:"c1",name:"Meera Nair",kind:"customer",biz:"st",cp:"me",labels:["New customer"],color:PARTY[5],acct:"Personal account · phone verified · Kochi",
+  msgs:[M("cp","Hi! Do you have the Kanjivaram silk saree in maroon? Saw it on your page.","10:42 am"),M("biz",S.greetingText,"10:42 am",{auto:"greeting"})],unread:1});
+chat({id:"c2",name:"Arjun Retail Pvt Ltd",kind:"b2b",labels:["Wholesale","Net 30"],color:PARTY[1],assignee:"Ravi",acct:"Business · GST verified · Bengaluru",
+  msgs:[M("biz",{type:"doc",ref:"INV-0148"},"Mon"),M("cp","Received the last lot, thanks. For December we need 20 rolls of organic cotton and 10 of linen. What is your best price?","9:15 am")],unread:1});
+chat({id:"c3",name:"Kapoor Yarns",kind:"supplier",labels:["Supplier"],color:PARTY[3],acct:"Business · GST verified · Surat",msgs:[M("sys","PO 0139 received · 24 boxes thread cones","Sat"),M("cp",{type:"doc",ref:"BILL-0061"},"Sat"),M("cp","Bill attached for PO 0139. Due in 7 days.","Sat")]});
+chat({id:"c4",name:"Gujarat Dyes & Prints",kind:"supplier",labels:["Supplier"],color:PARTY[7],acct:"Business · GST verified · Ahmedabad",msgs:[M("cp","New indigo block-print range is ready. Want samples?","Thu")]});
+chat({id:"c5",name:"Surat Silk Mills",kind:"supplier",labels:["Supplier"],color:PARTY[8],acct:"Business · GST verified · Surat",msgs:[M("biz","Please share the updated rate card for linen.","Wed"),M("cp","Rates unchanged till January.","Wed")]});
+chat({id:"c6",name:"Ravi · Sales",kind:"team",labels:["Team"],color:PARTY[6],acct:"Team member",msgs:[M("cp","Arjun Retail wants bulk pricing on cotton and linen. Can I offer 15%?","9:20 am")],unread:1});
+chat({id:"c7",name:"Nisha Boutique",kind:"b2b",labels:["Wholesale"],color:PARTY[2],acct:"Business · GST verified · Chennai",msgs:[M("cp",{type:"doc",ref:"CON-0012"},"Yesterday"),M("cp","Signed from my side. Please countersign so we can start December supply.","Yesterday")],unread:1});
+chat({id:"c9",name:"Rohan Mehta",kind:"customer",labels:["Paid"],color:PARTY[4],acct:"Personal account · phone verified · Mumbai",msgs:[M("cp",{type:"doc",ref:"ORD-0201"},"Yesterday"),M("biz","Thank you! Packing your order today.","Yesterday")]});
+chat({id:"x1",name:"Meera Nair",kind:"customer",biz:"qd",cp:"me",custOnly:true,color:PARTY[5],msgs:[M("biz","Hi! Wireless earbuds at 80% off, today only. Pay ₹999 by UPI to 98•••••210 to book yours.","Yesterday")],unreadC:1});
+chat({id:"x2",name:"Meera Nair",kind:"customer",biz:"am",cp:"me",custOnly:true,color:PARTY[5],msgs:[M("cp","Do you have Vitamin D3 60K?","Mon"),M("biz",{type:"doc",ref:"ORD-0187"},"Mon"),M("sys","ORD 0187 delivered and payment released","Mon")]});
+
+/* ===== helpers ===== */
+const cur=()=>S.stack[S.stack.length-1];
+function post(cid,by,m){const c=C(cid);c.msgs.push({by,time:now(),...(typeof m==="string"?{type:"text",text:m}:m)});c.ts=Date.now();
+  const open=cur().name==="chat"&&cur().id===cid;if(!open){if(by==="cp")c.unread++;if(by==="biz")c.unreadC++;}}
+let toastT;function toast(t){S.toast=t;render();clearTimeout(toastT);toastT=setTimeout(()=>{S.toast=null;render()},2600)}
+function sim(cid,ms,fn){setTimeout(()=>{S.typing[cid]=true;render();setTimeout(()=>{S.typing[cid]=false;fn();render()},850)},ms)}
+const itemsOf=d=>d.items.map(i=>({...i,p:i.pid?P(i.pid):{name:i.name,unit:"pc"}}));
+const party=cid=>C(cid).name;
+function chatTitle(c){return isBiz()?c.name:BIZ[c.biz].name}
+function chatColor(c){return isBiz()?c.color:BIZ[c.biz].color}
+const av=(name,color,size)=>`<div class="av" style="background:${color}${size?`;width:${size}px;height:${size}px;font-size:${Math.round(size/2.9)}px;border-radius:${Math.round(size/3.8)}px`:""}">${initials(name)}</div>`;
+const verified=b=>b.lv.gst||b.lv.udyam;
+const vbadge=b=>verified(b)?`<span class="vb" title="Verified business">${ic("shield","s")}</span>`:"";
+
+/* status tone: turmeric only when the viewer must act */
+function docState(d,sd){
+  const me=sd||side();
+  switch(d.kind){
+    case "invoice": return d.status==="paid"?["good","Paid"]:(me==="cp"?["wait","Pay now"]:["tint","Awaiting payment · due "+d.due]);
+    case "quote": return {pending_approval:role()==="owner"&&me==="biz"?["wait","Approve"]:["tint","With owner"],sent:me==="cp"?["wait","Review quote"]:["tint","Sent"],accepted:me==="biz"?["wait","Accepted · create order"]:["good","Accepted"],converted:["good","Ordered"],declined:["bad","Declined"]}[d.status];
+    case "order": return {placed:me==="biz"?["wait","New order · accept"]:["tint","Waiting for seller"],accepted:me==="biz"?["wait","Ship it"]:["tint","Packing"],shipped:["tint",(d.ship?STAGES[d.ship.stage]:"Shipped")],delivered:me==="cp"?["wait","Confirm you received it"]:["good","Delivered"],completed:["good","Completed"],cancelled:["bad","Cancelled"]}[d.status];
+    case "paylink": return d.status==="paid"?["good","Paid"]:(me==="cp"?["wait","Pay now"]:["tint","Awaiting payment"]);
+    case "contract": {const mine=d.signers.find(s=>me==="biz"?s.me:!s.me);return d.status==="signed"?["good","Signed by both"]:(mine&&!mine.at?["wait","Your signature needed"]:["tint","Waiting for other side"])}
+    case "rfq": return {sent:["tint",d.quotes.length+" of "+d.suppliers.length+" replied"],quotes_in:["wait","Compare quotes"],closed:["good","PO raised"]}[d.status];
+    case "squote": return {received:["tint","Quote received"],chosen:["good","Chosen"],lost:["mute","Not chosen"]}[d.status];
+    case "po": return {pending_approval:role()==="owner"?["wait","Approve"]:["tint","With owner"],sent:["tint","Sent"],accepted:["tint","Confirmed"],dispatched:["wait","Arriving · mark received"],received:["good","Received"],declined:["bad","Declined"]}[d.status];
+    case "bill": return d.status==="paid"?["good","Paid"]:["wait","Pay by "+d.due];
+  }
+  return ["mute",d.status];
+}
+const KIND={invoice:"Tax invoice",quote:"Quotation",order:"Order",paylink:"Payment request",contract:"Contract",rfq:"Request for quotes",squote:"Supplier quote",po:"Purchase order",bill:"Supplier bill"};
+
+/* ===== pending ===== */
+function pending(){const d=Object.values(S.docs);return{
+  approvals:d.filter(x=>x.status==="pending_approval"),
+  sign:d.filter(x=>x.kind==="contract"&&x.signers.some(s=>s.me&&!s.at)),
+  orders:d.filter(x=>x.kind==="order"&&!x.ext&&(x.status==="placed"||x.status==="accepted")),
+  collect:d.filter(x=>x.kind==="invoice"&&x.status==="unpaid"),
+  pay:d.filter(x=>x.kind==="bill"&&x.status==="unpaid"),
+  compare:d.filter(x=>x.kind==="rfq"&&x.status==="quotes_in"),
+  inbound:d.filter(x=>x.kind==="po"&&x.status==="dispatched"),
+  human:S.chats.filter(c=>c.needsHuman&&!c.custOnly),
+  low:S.products.filter(p=>p.stock<=p.reorder)}}
+function pendingCount(){const p=pending();return (role()==="owner"?p.approvals.length:0)+p.sign.length+p.orders.length+p.collect.length+p.pay.length+p.compare.length+p.inbound.length+p.human.length+p.low.length}
+
+/* ===== cards ===== */
+function lines(d){const its=itemsOf(d),t=totals(d.items,d.disc||0,d.shipFee||0);
+  return its.slice(0,4).map(i=>`<div class="li"><span>${esc(i.p.name)}${i.v?" · "+esc(i.v):""} × ${i.qty}</span><span class="num">${money(i.qty*i.price)}</span></div>`).join("")+
+  `<div class="tot">${d.disc?`<div class="li"><span>Discount ${d.disc}%</span><span class="num">−${money(t.d)}</span></div>`:""}<div class="li"><span>GST 5%</span><span class="num">${money(t.tax)}</span></div>${t.ship?`<div class="li"><span>Shipping</span><span class="num">${money(t.ship)}</span></div>`:""}<div class="li"><span>Total</span><span class="num">${money(t.total)}</span></div></div>`}
+const A=(act,id,label,cls="")=>`<button class="${cls}" data-act="${act}" data-id="${id}">${label}</button>`;
+function productCard(p,c){const b2b=c&&c.kind==="b2b";const pr=b2b?p.whole:p.price;
+  return `<div class="pblock" style="background:${p.color}"><span class="code">${p.code}</span><small>${p.stock} in stock</small></div><div class="cd"><div class="ttl">${esc(p.name)}</div><div class="li"><span>${b2b?"Wholesale price":"Price"} per ${p.unit}</span><span class="num">${money(pr)}</span></div><div class="meta">${esc(p.desc)} GST extra.</div></div>`+
+  (side()==="cp"?`<div class="acts">${A("cporder",p.id,"Order","pri")}${A("pdetail",p.id,"Details")}</div>`:"")}
+function cardHTML(m,c){
+  if(m.type==="product")return productCard(P(m.pid),c);
+  if(m.type==="payment")return `<div class="ch t-good"><span class="code">${code(m.ref)}</span><small>${m.dir==="out"?"Payment sent":"Payment received"}</small></div><div class="cd"><div class="ttl num">${money(m.amount)}</div><div class="meta">${esc(m.how)}${m.held?" · held by BOC Protect until delivery":""}</div></div>`;
+  if(m.type==="rate")return `<div class="ch t-wait"><span class="code">${code(m.ref)}</span><small>Rate this order</small></div><div class="cd">${side()==="cp"&&!D(m.ref).rated?`<div class="k">How was your order from ${esc(BIZ[c.biz].name)}?</div><div class="stars">${[1,2,3,4,5].map(n=>`<button data-act="rate" data-id="${m.ref}" data-n="${n}" aria-label="${n} stars">${ic("star")}</button>`).join("")}</div>`:`<div class="k">${D(m.ref).rated?`Rated ${D(m.ref).rated} out of 5`:"Waiting for the customer's rating"}</div>`}</div>`;
+  const d=D(m.ref);if(!d)return"";
+  const [tone,label]=docState(d),me=side();
+  let body="",foot="";
+  switch(d.kind){
+    case "quote":
+      body=lines(d)+`<div class="meta">Terms: ${d.terms} · valid 7 days</div>`;
+      if(d.status==="pending_approval")foot=me==="biz"&&role()==="owner"?`<div class="acts">${A("approve",d.id,"Approve","pri")}${A("reject",d.id,"Reject")}</div>`:`<div class="note">Discount above 10% needs the owner's approval before the buyer sees it.</div>`;
+      else if(d.status==="sent"&&me==="cp")foot=`<div class="acts">${A("cpaccept",d.id,"Accept","pri")}${A("cpdecline",d.id,"Decline")}</div>`;
+      else if(d.status==="accepted"&&me==="biz")foot=`<div class="acts">${A("convert",d.id,"Create order and invoice","pri")}</div>`;
+      else if(d.status==="converted")foot=`<div class="note">Became ${code(d.order)}.</div>`;
+      break;
+    case "order":{
+      const st=d.ship?d.ship.stage:-1;
+      body=lines(d)+`<div class="meta">${d.pay==="held"?"Paid "+money(docTotal(d))+" · held by BOC Protect":d.pay==="cod"?"Pay on delivery":d.pay==="released"?"Payment released to seller":"Unpaid"}</div>`+
+        (d.ship?`<div class="track">${STAGES.map((s,i)=>`<i class="${i<=st?"on":""}"></i>`).join("")}</div><div class="meta">${esc(d.ship.courier)} · AWB <span class="num">${d.ship.awb}</span></div>`:"");
+      if(d.ext)break;
+      if(me==="biz"){
+        if(d.status==="placed")foot=`<div class="acts">${A("accept",d.id,"Accept order","pri")}${A("decline",d.id,"Can't fulfil")}</div>`;
+        else if(d.status==="accepted")foot=`<div class="acts">${A("shipsheet",d.id,"Ship it","pri")}</div>`;
+        else if(d.status==="shipped"||d.status==="delivered")foot=`<div class="acts">${A("track",d.id,"Track")}</div>`;
+      }else{
+        if(d.status==="shipped")foot=`<div class="acts">${A("track",d.id,"Track parcel")}</div>`;
+        else if(d.status==="delivered")foot=`<div class="acts">${A("confirm",d.id,"I received it","pay")}${A("issue",d.id,"Report a problem")}</div>`;
+      }
+      break;}
+    case "invoice":
+      body=lines(d)+`<div class="meta">${BIZ.st.gstin} · ${d.terms==="Advance"||d.terms==="Order"?"Due on receipt":d.terms+", due "+d.due}</div>`;
+      if(d.status==="unpaid")foot=me==="cp"?`<div class="acts">${A("paysheet",d.id,"Pay "+money(docTotal(d)),"pay")}</div>`:`<div class="acts">${A("remind",d.id,"Send reminder")}${A("markpaid",d.id,"Record cash payment")}</div>`;
+      else foot=`<div class="note">Paid${d.paidHow?" by "+esc(d.paidHow):""}.</div>`;
+      break;
+    case "paylink":
+      body=`<div class="ttl num">${money(d.amount)}</div><div class="meta">${esc(d.note)}</div>`;
+      foot=d.status==="paid"?`<div class="note">Paid by UPI.</div>`:me==="cp"?`<div class="acts">${A("paysheet",d.id,"Pay "+money(d.amount),"pay")}</div>`:`<div class="note">The customer can pay by UPI, card or net banking.</div>`;break;
+    case "rfq":
+      body=itemsOf(d).map(i=>`<div class="li"><span>${esc(i.p.name)}</span><span class="num">${i.qty} ${i.p.unit}</span></div>`).join("")+`<div class="meta">Sent to ${d.suppliers.length} suppliers</div>`;
+      if(d.status==="quotes_in")foot=`<div class="acts">${A("compare",d.id,"Compare quotes","pri")}</div>`;
+      if(d.status==="closed")foot=`<div class="note">${code(d.po)} raised with ${esc(party(D(d.po).chat))}.</div>`;break;
+    case "squote":
+      body=lines(d)+`<div class="meta">Delivery in ${d.lead} days · for ${code(d.rfq)}</div>`;
+      if(d.status==="received")foot=`<div class="acts">${A("compare",d.rfq,"Compare all quotes","pri")}</div>`;break;
+    case "po":
+      body=lines(d)+`<div class="meta">Deliver to warehouse, Coimbatore</div>`;
+      if(d.status==="pending_approval")foot=role()==="owner"?`<div class="acts">${A("approve",d.id,"Approve","pri")}${A("reject",d.id,"Reject")}</div>`:`<div class="note">Above ₹50,000. Waiting for the owner.</div>`;
+      else if(d.status==="dispatched")foot=`<div class="acts">${A("receive",d.id,"Mark goods received","pri")}</div>`;
+      else if(d.status==="received")foot=`<div class="note">Stock updated. Bill ${code(d.bill)} added.</div>`;break;
+    case "bill":
+      body=`<div class="ttl num">${money(d.amount)}</div><div class="meta">For ${code(d.ref)} · due ${d.due}</div>`;
+      foot=d.status==="unpaid"?`<div class="acts">${A("paybill",d.id,"Pay now","pri")}</div>`:`<div class="note">Paid by bank transfer.</div>`;break;
+    case "contract":{
+      body=`<div class="ttl">${esc(d.title)}</div><div class="meta" style="margin-top:0">Term ${d.term}</div>`+d.signers.map(s=>`<div class="li"><span>${esc(s.who)}</span><span class="tag ${s.at?"tg-good":"tg-wait"}">${s.at?"Signed":"Pending"}</span></div>`).join("")+(d.status==="signed"?`<div class="meta">Fingerprint <span class="num">${d.fp}</span></div>`:"");
+      const mine=d.signers.find(s=>me==="biz"?s.me:!s.me);
+      foot=mine&&!mine.at?`<div class="acts">${A("review",d.id,"Review and sign","pri")}</div>`:`<div class="acts">${A("review",d.id,d.status==="signed"?"View signed copy":"View contract")}</div>`;break;}
+  }
+  return `<div class="ch t-${tone}"><span class="code">${code(d.id)}</span><small>${esc(label)}</small></div><div class="cd"><div class="k">${KIND[d.kind]}</div>${body}</div>${foot}`;
+}
+
+/* ===== shell pieces ===== */
+function status(){return `<div class="status"><span class="num">9:41</span><span>5G</span></div>`}
+function hdr(title,{back=true,sub="",actions=""}={}){
+  const b=back?(S.os==="ios"?`<button class="ib back" data-act="back" aria-label="Back">${ic("chev")}Back</button>`:`<button class="ib" data-act="back" aria-label="Back">${ic("arrow")}</button>`):"";
+  return `<div class="hdr">${b}<div class="ttl"><h2>${title}</h2>${sub?`<div class="sub">${sub}</div>`:""}</div>${actions||(S.os==="ios"&&back?`<span style="width:70px"></span>`:"")}</div>`}
+function big(title,actions=""){return `<div class="big"><h1>${title}</h1>${actions}</div>`}
+function nav(){
+  const items=isBiz()?[["chats","chat","Chats"],["pending","pending","Pending"],["biz","store","Business"],["more","menu","More"]]:[["chats","chat","Chats"],["explore","compass","Explore"],["orders","bag","Orders"],["me","user","You"]];
+  const pc=isBiz()?pendingCount():0,uc=S.chats.filter(c=>visibleChat(c)&&(isBiz()?c.unread:c.unreadC)).length;
+  return `<nav class="nav" style="grid-template-columns:repeat(4,1fr)">${items.map(([k,i,l])=>`<button class="${S.tab===k?"on":""}" data-act="tab" data-t="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="pill">${ic(i)}</span>${l}${k==="pending"&&pc?`<span class="dot">${pc}</span>`:""}${k==="chats"&&uc?`<span class="dot">${uc}</span>`:""}</button>`).join("")}</nav>`}
+const visibleChat=c=>isBiz()?!c.custOnly:c.cp==="me";
+
+/* ===== business screens ===== */
+function chatList(){
+  const F=isBiz()?["All","Unread","Customers","Wholesale","Suppliers","Team"]:["All","Unread"];
+  let cs=S.chats.filter(visibleChat).sort((a,b)=>(b.ts||0)-(a.ts||0));const f=S.filter;
+  cs=cs.filter(c=>f==="All"||(f==="Unread"&&(isBiz()?c.unread:c.unreadC))||(f==="Customers"&&c.kind==="customer")||(f==="Wholesale"&&c.kind==="b2b")||(f==="Suppliers"&&c.kind==="supplier")||(f==="Team"&&c.kind==="team"));
+  if(S.q)cs=cs.filter(c=>chatTitle(c).toLowerCase().includes(S.q.toLowerCase()));
+  const last=c=>{const m=c.msgs[c.msgs.length-1];if(!m)return"";const mine=m.by===side();if(m.type==="text")return(mine?"You: ":"")+m.text;if(m.by==="sys")return m.text;if(m.type==="product")return"Product: "+P(m.pid).name;if(m.type==="payment")return"Payment "+money(m.amount);if(m.type==="rate")return"Rate your order";const d=D(m.ref);return d?code(d.id)+" · "+docState(d)[1]:""};
+  const open=c=>Object.values(S.docs).filter(d=>d.chat===c.id&&!["good","mute"].includes(docState(d)[0])).slice(0,4);
+  let top="";
+  if(isBiz()){const p=pending(),n=pendingCount();
+    const urgent=[...(role()==="owner"?p.approvals:[]),...p.sign,...p.orders,...p.collect,...p.pay,...p.compare].slice(0,4);
+    top=(n?`<button class="waitbar" data-act="tab" data-t="pending"><div style="flex:1"><b>${n} waiting on you</b><span>${[p.sign.length&&p.sign.length+" to sign",p.orders.length&&p.orders.length+" to ship",p.collect.length&&p.collect.length+" to collect",p.human.length&&p.human.length+" need a person",p.low.length&&p.low.length+" low stock"].filter(Boolean).join(" · ")}</span></div>${ic("chevr")}</button>`:"")+
+      (urgent.length?`<div class="strip">${urgent.map(d=>{const[t,l]=docState(d);return `<button class="chip t-${t}" data-act="opendoc" data-id="${d.id}"><span class="code">${code(d.id)}</span><small>${esc(l)}</small></button>`}).join("")}</div>`:"");}
+  const acts=isBiz()?(S.os==="ios"?`<button class="ib" data-act="newchat" aria-label="New chat">${ic("pen")}</button>`:``):"";
+  return status()+big("Chats",acts)+`<div class="search">${ic("search")}<input id="q" placeholder="Search chats" value="${esc(S.q)}" aria-label="Search chats"></div>
+  <div class="fchips">${F.map(x=>`<button class="fc ${x===S.filter?"on":""}" data-act="filter" data-f="${x}">${x}</button>`).join("")}</div>
+  <div class="body">${top}${cs.map(c=>{const o=open(c),u=isBiz()?c.unread:c.unreadC,b=isBiz()?null:BIZ[c.biz];
+    return `<button class="row" data-act="open" data-id="${c.id}">${av(chatTitle(c),chatColor(c))}<div class="mid"><div class="t"><span class="n">${esc(chatTitle(c))}</span>${b?vbadge(b):""}${c.needsHuman&&isBiz()?`<span class="tag tg-wait">Needs a person</span>`:""}</div><div class="s">${S.typing[c.id]?"typing…":esc(last(c))}</div>${o.length?`<div class="dots">${o.map(d=>`<i class="t-${docState(d)[0]}"></i>`).join("")}</div>`:""}</div><div class="r"><span>${c.msgs.length?c.msgs[c.msgs.length-1].time:""}</span>${u?`<span class="badge">${u}</span>`:""}</div></button>`}).join("")||`<div class="sec empty">No chats match.</div>`}<div style="height:80px"></div></div>`+
+  (isBiz()&&S.os==="android"?`<button class="fab" data-act="newchat" aria-label="New chat">${ic("plus")}</button>`:"")+nav()}
+
+function chatView(v){
+  const c=C(v.id);if(isBiz())c.unread=0;else c.unreadC=0;
+  const b=BIZ[c.biz];
+  const sub=S.typing[c.id]?"typing…":isBiz()?[c.acct,c.assignee?"handled by "+c.assignee:null].filter(Boolean).join(" · "):(verified(b)?"Verified business · "+b.reply.replace("Usually ",""):"Not verified");
+  const openDocs=Object.values(S.docs).filter(d=>(d.chat===c.id||(d.kind==="rfq"&&d.suppliers.includes(c.id)))&&!["mute"].includes(docState(d)[0])&&!(docState(d)[0]==="good"&&d.status!=="delivered")).slice(-6);
+  const strip=openDocs.length?`<div class="hstrip">${openDocs.map(d=>{const[t,l]=docState(d);return `<button class="chip t-${t}" data-act="jump" data-id="${d.id}"><span class="code">${code(d.id)}</span><small>${esc(l)}</small></button>`}).join("")}</div>`:"";
+  const banner=!isBiz()?(verified(b)?`<button class="banner ok" data-act="bizprofile" data-id="${c.biz}">${ic("shield")}<span><b>${esc(b.name)} is a verified business</b>${b.lv.gst?"GST verified":"Udyam registered"} · on BOC since ${b.since} · ${b.rating}★ from ${b.reviews} reviews. Tap to see details.</span></button>`:`<button class="banner warn" data-act="bizprofile" data-id="${c.biz}">${ic("alert")}<span><b>Not a verified business</b>Only the phone number is verified. Never pay outside BOC, and use BOC Protect so your money is held until delivery.</span></button>`):"";
+  const seenDoc=new Set();
+  const msgs=c.msgs.map(m=>{
+    if(m.by==="sys"&&m.type!=="rate")return `<div class="sys">${esc(m.text)}</div>`;
+    const mine=m.by===side();
+    let label="";
+    if(m.auto==="assistant")label=`<div class="lb">${ic("spark","s")}${isBiz()?"BOC Assistant · sent automatically":"Automated reply from "+esc(b.name)}</div>`;
+    else if(m.auto==="greeting")label=`<div class="lb auto">${isBiz()?"Auto · greeting":"Automated greeting"}</div>`;
+    else if(m.from&&(!mine||isBiz()))label=`<div class="lb auto">${esc(m.from)}${isBiz()?"":" · "+esc(b.name)}</div>`;
+    if(m.type==="text")return `<div class="m ${mine?"me":""}">${label}${esc(m.text)}<div class="time">${m.time}</div></div>`;
+    let idattr="";if(m.ref&&!seenDoc.has(m.ref)){seenDoc.add(m.ref);idattr=`id="m-${m.ref}"`}
+    return `<div class="m card ${mine?"me":""}" ${idattr}>${label?`<div style="padding:8px 12px 0">${label}</div>`:""}${cardHTML(m,c)}<div class="time" style="padding:0 10px 6px">${m.time}</div></div>`}).join("");
+  const lastA=[...c.msgs].reverse().find(m=>m.by!=="sys");
+  const quick=!isBiz()?`<div class="quick">${lastA&&lastA.auto==="assistant"?`<button class="fc" data-act="cpsay" data-t="I would like to talk to a person">${ic("user","s")}Talk to a person</button>`:""}<button class="fc" data-act="shop" data-id="${c.biz}">${ic("bag","s")}Catalog</button><button class="fc" data-act="bizprofile" data-id="${c.biz}">${ic("shield","s")}About this business</button></div>`:"";
+  const sug=isBiz()&&c.suggest?`<div class="suggest">${ic("spark","s")}<p><b>Suggested reply:</b> ${esc(c.suggest)}</p><button class="btn sm" data-act="usesug" data-id="${c.id}">Send</button></div>`:"";
+  return status()+`<div class="hdr convo">${S.os==="ios"?`<button class="ib back" data-act="back" aria-label="Back">${ic("chev")}</button>`:`<button class="ib" data-act="back" aria-label="Back">${ic("arrow")}</button>`}${av(chatTitle(c),chatColor(c),36)}<button data-act="${isBiz()?"profile":"bizprofile"}" data-id="${isBiz()?c.id:c.biz}" class="ttl" style="border:0;background:none;text-align:left;padding:0 4px;min-width:0"><h2 style="font-size:16px;font-weight:700">${esc(chatTitle(c))} ${b&&!isBiz()?vbadge(b):""}</h2><div class="sub">${esc(sub)}</div></button><button class="ib" data-act="${isBiz()?"profile":"bizprofile"}" data-id="${isBiz()?c.id:c.biz}" aria-label="Details">${ic("info")}</button></div>${strip}
+  <div class="body" id="chatbody"><div class="chat">${banner}${msgs}${S.typing[c.id]?`<div class="typing">${esc(isBiz()?c.name.split(" ")[0]:b.name)} is typing…</div>`:""}</div></div>
+  ${quick}${sug}<div class="composer">${isBiz()?`<button class="round ghost" data-act="plus" data-id="${c.id}" aria-label="Send a business document">${ic("plus")}</button>`:""}<input id="composer" data-id="${c.id}" placeholder="${isBiz()?"Message, or / for quick replies":"Message "+esc(b.name)}" value="${esc(S.drafts[c.id]||"")}" aria-label="Message"><button class="round" data-act="send" data-id="${c.id}" aria-label="Send">${ic("send")}</button><div id="qrbox"></div></div>`}
+
+function pendingView(){
+  const p=pending();
+  const groups=[role()==="owner"&&["Approve",p.approvals,"approvals"],["Sign",p.sign,"sign"],["Ship",p.orders,"orders"],["Collect",p.collect,"collect"],["Reply",p.human,"human"],["Pay",p.pay,"pay"],["Compare",p.compare,"compare"],["Low stock",p.low,"low"]].filter(Boolean);
+  const it=(chipTone,codeTxt,title,sub,act,id,label)=>`<div class="item"><div class="mini t-${chipTone}"><span class="code" style="font-size:12px">${codeTxt}</span></div><div class="mid"><div class="t">${title}</div><div class="s">${sub}</div></div><button class="btn sm ${chipTone==="wait"?"waitb":"tonal"}" data-act="${act}" data-id="${id}">${label}</button></div>`;
+  const sec=(key,t,arr,fn,empty)=>`<div class="sec" id="pg-${key}"><h4>${t}<span class="num">${arr.length}</span></h4>${arr.length?arr.map(fn).join(""):`<div class="empty">${empty}</div>`}</div>`;
+  const toCollect=p.collect.reduce((a,d)=>a+docTotal(d),0),toPay=p.pay.reduce((a,d)=>a+d.amount,0);
+  return status()+big("Pending")+`<div class="body"><div class="sec" style="padding-top:4px"><div class="grid4">${groups.map(([l,a,k])=>`<button class="chip ${a.length?"t-wait":"zero"}" data-act="jumpsec" data-id="${k}"><span class="code" style="font-size:26px">${a.length}</span><small>${l}</small></button>`).join("")}</div></div>
+  <div class="sec" style="padding-top:0"><div class="grid2"><div class="tile"><div class="l">To collect</div><div class="v num">${money(toCollect)}</div></div><div class="tile"><div class="l">To pay</div><div class="v num">${money(toPay)}</div></div></div></div>
+  ${role()==="owner"?sec("approvals","Approvals",p.approvals,d=>it("wait",code(d.id).split(" ")[0],`${KIND[d.kind]} ${code(d.id)}`,`${esc(party(d.chat))} · ${money(docTotal(d))}${d.disc?" · "+d.disc+"% off":""} · from Ravi`,"opendoc",d.id,"Review"),"Nothing to approve."):""}
+  ${sec("sign","Contracts to sign",p.sign,d=>it("wait","CON",esc(d.title),esc(party(d.chat)),"review",d.id,"Sign"),"No contracts waiting.")}
+  ${sec("orders","Orders to accept or ship",p.orders,d=>it("wait","ORD",`${code(d.id)} · ${esc(party(d.chat))}`,itemsOf(d).map(i=>i.p.name).join(", "),"opendoc",d.id,d.status==="placed"?"Accept":"Ship"),"All orders are on their way.")}
+  ${sec("human","Chats that need a person",p.human,c=>it("wait","AI",esc(c.name),"The assistant handed this chat to your team","open",c.id,"Reply"),"The assistant is handling everything.")}
+  ${sec("collect","Payments to collect",p.collect,d=>it("tint","INV",`${esc(party(d.chat))} · ${money(docTotal(d))}`,`${code(d.id)} · due ${d.due}`,"remind",d.id,"Remind"),"Nothing outstanding.")}
+  ${sec("pay","Bills to pay",p.pay,d=>it("wait","BILL",`${esc(party(d.chat))} · ${money(d.amount)}`,`${code(d.id)} · due ${d.due}`,"paybill",d.id,"Pay"),"No bills due.")}
+  ${sec("compare","Supplier quotes to compare",p.compare,d=>it("wait","RFQ",code(d.id),d.quotes.length+" quotes in","compare",d.id,"Compare"),"No quotes waiting.")}
+  ${p.inbound.length?sec("inbound","Goods on the way",p.inbound,d=>it("wait","PO",`${code(d.id)} · ${esc(party(d.chat))}`,itemsOf(d).map(i=>i.qty+" "+i.p.unit+" "+i.p.name).join(", "),"receive",d.id,"Received"),""):""}
+  ${sec("low","Low stock",p.low,x=>`<div class="item"><div class="mini" style="background:${x.color}"><span class="code" style="font-size:11px">${x.code}</span></div><div class="mid"><div class="t">${esc(x.name)}</div><div class="s">${x.stock} left · reorder at ${x.reorder}</div></div><button class="btn sm waitb" data-act="reorder" data-id="${x.id}">Reorder</button></div>`,"Stock levels are fine.")}
+  </div>`+nav()}
+
+function bizView(){
+  const t=(go,icon,color,label)=>`<button class="tool" data-act="go" data-s="${go}"><span class="ti" style="background:${color}">${ic(icon)}</span>${label}</button>`;
+  const d=Object.values(S.docs);
+  return status()+big("Business")+`<div class="body"><div class="sec"><div class="grid2">
+  <div class="tile"><div class="l">Sales in November</div><div class="v num">${money(S.months[5][1])}</div></div>
+  <div class="tile"><div class="l">Held by BOC Protect</div><div class="v num">${money(S.payout.held)}</div></div>
+  <div class="tile"><div class="l">Open orders</div><div class="v num">${d.filter(x=>x.kind==="order"&&!x.ext&&!["completed","cancelled"].includes(x.status)).length}</div></div>
+  <div class="tile"><div class="l">Rating</div><div class="v num">${BIZ.st.rating} <span style="font-size:13px;color:var(--ink2)">(${BIZ.st.reviews})</span></div></div></div></div>
+  <div class="sec"><div class="grid4" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">${t("catalog","tag","#7B1E3A","Products")}${t("orders","box","#2B3A8C","Orders")}${t("money","wallet","#2E7D4F","Money")}${t("customers","users","#0F7C86","Customers")}${t("purchases","cart","#9A6B12","Purchases")}${t("contracts","pen","#5B3A8C","Contracts")}${t("assistant","spark","#2B3A8C","AI assistant")}${t("broadcast","mega","#C0562A","Broadcasts")}${t("team","users","#4A5D23","Team")}</div></div>
+  <div class="sec"><button class="banner ok" style="margin:0;width:100%" data-act="bizprofile" data-id="st">${ic("shield")}<span><b>Your public profile</b>This is what customers see before they buy: GST verified, bank verified, ${BIZ.st.orders.toLocaleString("en-IN")} orders.</span></button></div></div>`+nav()}
+
+function moreView(){
+  const r=(go,icon,t,s)=>`<button class="row" data-act="go" data-s="${go}"><span class="mini" style="background:var(--tint-soft);color:var(--tint)">${ic(icon)}</span><div class="mid"><div class="t">${t}</div><div class="s">${s}</div></div>${ic("chevr")}</button>`;
+  return status()+big("More")+`<div class="body">${r("assistant","spark","AI assistant","Answers customers, hands off to your team")}${r("automations","bolt","Auto-replies and reminders","Greeting, away message, payment reminders")}${r("quick","chat","Quick replies",S.quick.length+" saved · type / in any chat")}${r("broadcast","mega","Broadcasts","Opt-in messages with results")}${r("directory","compass","Find businesses","Suppliers and buyers near you")}${r("team","users","Team and roles","Who can do what")}${r("verification","shield","Verification and profile","GST, KYC, bank and public profile")}<button class="row" data-act="startob">${`<span class="mini" style="background:var(--sunk);color:var(--ink2)">${ic("swap")}</span>`}<div class="mid"><div class="t">Sign up as someone new</div><div class="s">Restart the sign-up flow</div></div>${ic("chevr")}</button></div>`+nav()}
+
+/* ===== customer screens ===== */
+function exploreView(){
+  const cats=["All","Clothing","Pharmacy","Food","Spices"];const f=S.efilter||"All";
+  const list=Object.entries(BIZ).filter(([k,b])=>f==="All"||(f==="Clothing"&&k==="st")||(f==="Pharmacy"&&k==="am")||(f==="Food"&&k==="kc")||(f==="Spices"&&k==="ms"));
+  return status()+big("Explore")+`<div class="search">${ic("search")}<input placeholder="Search businesses and products" aria-label="Search businesses"></div><div class="fchips">${cats.map(x=>`<button class="fc ${x===f?"on":""}" data-act="efilter" data-f="${x}">${x}</button>`).join("")}</div>
+  <div class="body">${list.map(([k,b])=>`<button class="row" data-act="bizprofile" data-id="${k}">${av(b.name,b.color)}<div class="mid"><div class="t"><span class="n">${esc(b.name)}</span>${vbadge(b)}</div><div class="s">${esc(b.cat)} · ${esc(b.city)}</div><div class="s">${b.rating?`${b.rating}★ · ${b.orders.toLocaleString("en-IN")} orders`:`<span class="tag tg-bad">Not verified</span> New on BOC`}</div></div>${ic("chevr")}</button>`).join("")}</div>`+nav()}
+function ordersView(){
+  const os=Object.values(S.docs).filter(d=>d.kind==="order"&&C(d.chat)&&C(d.chat).cp==="me").reverse();
+  return status()+big("Your orders")+`<div class="body"><div class="sec">${os.map(d=>{const[t,l]=docState(d,"cp");const b=BIZ[C(d.chat).biz];return `<button class="item" data-act="opendoc" data-id="${d.id}"><div class="mini t-${t}"><span class="code" style="font-size:12px">ORD</span></div><div class="mid"><div class="t">${esc(b.name)}</div><div class="s">${itemsOf(d).map(i=>i.p.name).join(", ")} · ${money(docTotal(d))}</div></div><span class="tag tg-${t}">${esc(l)}</span></button>`}).join("")||`<div class="empty">No orders yet. Explore businesses to start.</div>`}</div></div>`+nav()}
+function meView(){
+  return status()+big("You")+`<div class="body"><div class="sec" style="display:flex;gap:12px;align-items:center">${av("Meera Nair",PARTY[5],56)}<div><b style="font-size:17px">Meera Nair</b><div class="s" style="color:var(--ink2);font-size:13px">Personal account · +91 98•••••432</div></div></div>
+  <div class="sec"><div class="kv"><span>Phone</span><span class="tag tg-good">Verified</span></div><div class="kv"><span>Delivery address</span><span>14 Marine Drive, Kochi 682031</span></div><div class="kv"><span>Saved payment</span><span>UPI · meera@okbank</span></div><div class="kv"><span>BOC Protect</span><span>On for every order</span></div></div>
+  <div class="sec"><h4>Personal vs business</h4><p style="margin:0 0 12px;color:var(--ink2);font-size:13px">Personal accounts chat, shop, pay and sign. Only registered businesses can sell, send invoices or take payments, and every business shows its verification to you before you buy.</p><button class="btn full tonal" data-act="startbiz">${ic("store")}Register a business</button></div></div>`+nav()}
+
+/* ===== shared screens ===== */
+function verRows(b){const L=[["phone","Phone number verified","OTP on the registered mobile"],["gst","GSTIN verified",b.gstin?b.gstin+" · active · legal name "+(b.legal||b.name):"No GSTIN on file"],["udyam","Udyam registered",b.udyam||"Not registered"],["kyc","Owner identity verified","Aadhaar e-KYC of the owner"],["bank","Bank account verified","Payouts go to an account in the business's name"]];
+  return L.map(([k,t,s])=>`<div class="ver"><span class="vi ${b.lv[k]?"ok":"no"}">${ic(b.lv[k]?"check":"close","s")}</span><div><b>${b.lv[k]?t:t.replace("verified","not verified").replace("registered","not registered")}</b><span>${esc(b.lv[k]?s:"Not provided")}</span></div></div>`).join("")}
+const screens={
+  bizprofile:v=>{const b=BIZ[v.id];const ok=verified(b);const my=isBiz()&&v.id==="st";
+    const reviews=b.rating?[["Lakshmi R.","5","Saree was exactly like the photo. Packed well, came in 4 days."],["Imran K.","4","Good fabric. Delivery took a day longer than shown."]]:[];
+    return status()+hdr(my?"Your public profile":"About this business",{})+`<div class="body"><div class="hero" style="background:${b.color}">${av(b.name,"rgba(255,255,255,.18)",52)}<h2>${esc(b.name)}</h2><p>${esc(b.cat)} · ${esc(b.city)}</p></div>
+    ${ok?"":`<div class="sec" style="padding-bottom:0"><div class="banner warn" style="margin:0;width:100%">${ic("alert")}<span><b>Be careful with this business</b>It joined ${b.since} and has not verified its GST or bank account. Pay only through BOC so your money is protected.</span></div></div>`}
+    <div class="sec"><div class="grid2"><div class="tile"><div class="l">Rating</div><div class="v num">${b.rating?b.rating+"★":"None"}</div><div class="l">${b.reviews} reviews</div></div><div class="tile"><div class="l">Completed orders</div><div class="v num">${b.orders.toLocaleString("en-IN")}</div><div class="l">On BOC since ${b.since}</div></div></div></div>
+    <div class="sec"><h4>Verification</h4>${verRows(b)}</div>
+    <div class="sec"><h4>How they work</h4><div class="kv"><span>Replies</span><span>${esc(b.reply)}</span></div><div class="kv"><span>Hours</span><span>${esc(b.hours||"Not shared")}</span></div><div class="kv"><span>Delivery</span><span>${esc(b.ships||"Not shared")}</span></div><div class="kv"><span>Returns</span><span>${esc(b.returns||"Not shared")}</span></div><div class="kv"><span>Disputes</span><span>${esc(b.disputes||"No history")}</span></div><div class="kv"><span>Payment</span><span>BOC Protect: money held until you confirm delivery</span></div></div>
+    ${reviews.length?`<div class="sec"><h4>Recent reviews</h4>${reviews.map(r=>`<div class="item" style="display:block"><div class="t">${r[0]} · ${r[1]}★</div><div class="s">${r[2]}</div></div>`).join("")}</div>`:""}
+    ${my?`<div class="sec"><button class="btn full tonal" data-act="go" data-s="verification">Manage verification</button></div>`:`<div class="sec" style="display:flex;gap:10px"><button class="btn" style="flex:1" data-act="shop" data-id="${v.id}">${ic("bag","s")}Catalog</button><button class="btn tonal" style="flex:1" data-act="cpchat" data-id="${v.id}">${ic("chat","s")}Message</button></div><div class="sec" style="padding-top:0"><button class="btn out full" data-act="report">Report this business</button></div>`}</div>`},
+  shop:v=>{const b=BIZ[v.id];const ps=v.id==="st"?S.products.filter(p=>p.vis==="Everyone"):[];
+    return status()+hdr(esc(b.name),{sub:"Catalog"})+`<div class="body"><div class="sec"><div class="grid2">${ps.map(p=>`<button class="tile" style="padding:0;overflow:hidden;text-align:left" data-act="pdetail" data-id="${p.id}"><div class="pblock" style="background:${p.color};height:96px"><span class="code">${p.code}</span></div><div style="padding:8px 10px 10px"><div style="font-weight:700;font-size:13px">${esc(p.name)}</div><div class="num" style="font-size:13px;margin-top:2px">${money(p.price)}</div></div></button>`).join("")||`<div class="empty">This business has not added products yet.</div>`}</div></div></div>`},
+  pdetail:v=>{const p=P(v.id);return status()+hdr(esc(p.name),{sub:BIZ.st.name})+`<div class="body"><div class="pblock" style="background:${p.color};height:220px"><span class="code" style="font-size:26px">${p.code}</span><small>Photos shown as colour chips in this prototype</small></div>
+    <div class="sec"><div style="font-size:20px;font-weight:700">${esc(p.name)}</div><div class="num" style="font-size:20px;margin-top:4px">${money(p.price)} <span style="font-size:12px;color:var(--ink2);font-family:var(--f-ui)">+ GST 5%</span></div><p style="color:var(--ink2);margin:8px 0 0">${esc(p.desc)}</p></div>
+    <div class="sec"><div class="kv"><span>Options</span><span>${p.vars.join(", ")}</span></div><div class="kv"><span>In stock</span><span>${p.stock} ${p.unit}</span></div><div class="kv"><span>Delivery to Kochi</span><span>4–5 days, from ₹78</span></div><div class="kv"><span>Seller</span><span>${BIZ.st.name} ${vbadge(BIZ.st)}</span></div></div>
+    ${isBiz()?"":`<div class="sec" style="display:flex;gap:10px"><button class="btn" style="flex:1" data-act="cporder" data-id="${p.id}">Order</button><button class="btn tonal" style="flex:1" data-act="cpask" data-id="${p.id}">Ask in chat</button></div>`}</div>`},
+  catalog:()=>status()+hdr("Products",{sub:S.products.length+" products",actions:`<button class="ib" data-act="go" data-s="addproduct" aria-label="Add product">${ic("plus")}</button>`})+`<div class="body"><div class="sec"><div class="grid2">${S.products.map(p=>`<button class="tile" style="padding:0;overflow:hidden;text-align:left" data-act="pinfo" data-id="${p.id}"><div class="pblock" style="background:${p.color};height:84px"><span class="code">${p.code}</span><small class="num">${money(p.price)}</small></div><div style="padding:8px 10px 10px"><div style="font-weight:700;font-size:13px">${esc(p.name)}</div><div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><span class="tag ${p.stock<=p.reorder?"tg-wait":"tg-good"}">${p.stock} in stock</span><span class="tag tg-mute">${p.vis==="Everyone"?"Public":p.vis==="Hidden"?"Hidden":"Wholesale"}</span></div></div></button>`).join("")}</div></div><div class="sec"><button class="btn full" data-act="go" data-s="addproduct">${ic("plus","s")}Add a product</button></div></div>`,
+  addproduct:()=>{const f=S.np||(S.np={name:"",desc:"",cat:"Sarees",price:"",whole:"",moq:"5",stock:"",reorder:"5",hsn:"",vars:"",vis:"Everyone",color:"#2E6B5E",photos:0});
+    const fld=(k,l,ph,hint="",type="text")=>`<div class="field"><label for="np-${k}">${l}</label><input id="np-${k}" data-bind="np.${k}" value="${esc(f[k])}" placeholder="${ph}" ${type==="num"?'inputmode="numeric"':""}>${hint?`<span class="hint">${hint}</span>`:""}</div>`;
+    return status()+hdr("Add a product")+`<div class="body"><div class="sec">
+    <div class="banner ok" style="margin:0 0 14px;width:100%;background:var(--tint-soft)">${ic("spark")}<span><b>Describe it in one line, BOC fills the rest</b><span style="display:flex;gap:8px;margin-top:8px"><input id="np-ai" data-bind="np.ai" value="${esc(f.ai||"Green Kanchi silk saree with gold zari, 6.3 m, ₹16,000")}" style="flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;height:40px;padding:0 10px;background:var(--card)"><button class="btn sm" data-act="aifill">Fill</button></span></span></div>
+    <div class="lab">Photos</div><div class="wchips">${[0,1,2].map(i=>i<f.photos?`<span class="mini" style="width:72px;height:72px;background:${f.color}"></span>`:`<button class="mini" style="width:72px;height:72px;background:var(--sunk);color:var(--ink2);border:1px dashed var(--line)" data-act="addphoto" aria-label="Add photo">${ic("camera")}</button>`).join("")}</div>
+    <div style="height:14px"></div>${fld("name","Product name","e.g. Kanjivaram Silk Saree")}
+    <div class="field"><label for="np-desc">Description</label><textarea id="np-desc" data-bind="np.desc" placeholder="What makes it worth buying">${esc(f.desc)}</textarea></div>
+    <div class="lab">Category</div><div class="wchips">${["Sarees","Fabric","Dupattas","Apparel","Supplies"].map(x=>`<button class="fc ${f.cat===x?"on":""}" data-act="npset" data-k="cat" data-v="${x}">${x}</button>`).join("")}</div><div style="height:14px"></div>
+    <div class="grid2">${fld("price","Price for shoppers (₹)","18500","","num")}${fld("whole","Wholesale price (₹)","15200","","num")}</div>
+    <div class="grid2">${fld("moq","Wholesale minimum","5","","num")}${fld("hsn","HSN code","5007","Sets the GST rate on invoices")}</div>
+    ${fld("vars","Options","Maroon, Green, Mustard","Colours or sizes, separated by commas")}
+    <div class="grid2">${fld("stock","In stock","10","","num")}${fld("reorder","Remind me below","5","","num")}</div>
+    <div class="lab">Who can see it</div><div class="wchips">${["Everyone","Wholesale buyers","Hidden"].map(x=>`<button class="fc ${f.vis===x?"on":""}" data-act="npset" data-k="vis" data-v="${x}">${x}</button>`).join("")}</div>
+    </div><div class="sec"><button class="btn full" data-act="saveproduct">Save product</button></div></div>`},
+  orders:()=>{const os=Object.values(S.docs).filter(d=>d.kind==="order"&&!d.ext).reverse();return status()+hdr("Orders",{sub:os.length+" orders"})+`<div class="body"><div class="sec">${os.map(d=>{const[t,l]=docState(d,"biz");return `<button class="item" data-act="opendoc" data-id="${d.id}"><div class="mini t-${t}"><span class="code" style="font-size:12px">ORD</span></div><div class="mid"><div class="t">${code(d.id)} · ${esc(party(d.chat))}</div><div class="s">${itemsOf(d).map(i=>i.qty+" × "+i.p.name).join(", ")}</div></div><span class="tag tg-${t}">${esc(l)}</span></button>`}).join("")}</div></div>`},
+  money:()=>{const d=Object.values(S.docs),rec=d.filter(x=>x.kind==="invoice"&&x.status==="unpaid"),pay=d.filter(x=>x.kind==="bill"&&x.status==="unpaid"),max=Math.max(...S.months.map(m=>m[1]));
+    const parties=S.chats.filter(c=>c.kind!=="team"&&!c.custOnly).map(c=>({c,r:rec.filter(x=>x.chat===c.id).reduce((a,x)=>a+docTotal(x),0),p:pay.filter(x=>x.chat===c.id).reduce((a,x)=>a+x.amount,0)})).filter(x=>x.r||x.p);
+    return status()+hdr("Money",{sub:"Payouts, ledger and expenses"})+`<div class="body">
+    <div class="sec"><h4>Payouts</h4><div class="grid2"><div class="tile"><div class="l">Held by BOC Protect</div><div class="v num">${money(S.payout.held)}</div><div class="l">Released when buyers confirm delivery</div></div><div class="tile"><div class="l">Paid out this month</div><div class="v num">${money(S.payout.settled)}</div><div class="l">To ${S.payout.bank}, next working day</div></div></div></div>
+    <div class="sec"><h4>Sales, last 6 months</h4><div class="bars">${S.months.map((m,i)=>`<div class="${i===5?"cur":""}"><small>${(m[1]/100000).toFixed(1)}L</small><span style="height:${Math.round(m[1]/max*84)}px"></span></div>`).join("")}</div><div class="blab">${S.months.map(m=>`<small>${m[0]}</small>`).join("")}</div></div>
+    <div class="sec"><h4>Party balances (khata)</h4>${parties.map(x=>`<button class="item" data-act="open" data-id="${x.c.id}">${av(x.c.name,x.c.color,36)}<div class="mid"><div class="t">${esc(x.c.name)}</div><div class="s">${x.r?"Owes you":"You owe"}</div></div><span class="num" style="font-weight:700;color:var(${x.r?"--good":"--bad"})">${money(x.r||x.p)}</span></button>`).join("")||`<div class="empty">All settled.</div>`}</div>
+    <div class="sec"><h4>Expenses <button class="btn sm tonal" data-act="addexp">Add</button></h4>${S.expenses.slice().reverse().map(e=>`<div class="kv"><span>${e.c} · ${e.d}</span><span class="num">${money(e.a)}</span></div>`).join("")}</div></div>`},
+  customers:()=>{const cs=S.chats.filter(c=>(c.kind==="customer"||c.kind==="b2b")&&!c.custOnly);return status()+hdr("Customers",{sub:cs.length+" people and businesses"})+`<div class="body">${cs.map(c=>`<button class="row" data-act="profile" data-id="${c.id}">${av(c.name,c.color)}<div class="mid"><div class="t">${esc(c.name)}</div><div class="s">${esc(c.acct)}</div></div>${ic("chevr")}</button>`).join("")}</div>`},
+  purchases:()=>{const d=Object.values(S.docs),sup=S.chats.filter(c=>c.kind==="supplier");return status()+hdr("Purchases")+`<div class="body"><div class="sec"><button class="btn full" data-act="reorder" data-id="">Ask suppliers for quotes</button></div><div class="sec"><h4>Suppliers</h4>${sup.map(c=>`<button class="item" data-act="open" data-id="${c.id}">${av(c.name,c.color,36)}<div class="mid"><div class="t">${esc(c.name)}</div><div class="s">${esc(c.acct)}</div></div></button>`).join("")}</div>
+    <div class="sec"><h4>Documents</h4>${d.filter(x=>["rfq","po","bill"].includes(x.kind)).reverse().map(x=>{const[t,l]=docState(x);return `<button class="item" data-act="opendoc" data-id="${x.id}"><div class="mini t-${t}"><span class="code" style="font-size:11px">${code(x.id).split(" ")[0]}</span></div><div class="mid"><div class="t">${code(x.id)}</div><div class="s">${x.kind==="rfq"?x.suppliers.length+" suppliers":esc(party(x.chat))+" · "+money(docTotal(x))}</div></div><span class="tag tg-${t}">${esc(l)}</span></button>`}).join("")}</div></div>`},
+  contracts:()=>{const cs=Object.values(S.docs).filter(d=>d.kind==="contract");return status()+hdr("Contracts")+`<div class="body"><div class="sec">${cs.map(d=>{const[t,l]=docState(d);return `<button class="item" data-act="review" data-id="${d.id}"><div class="mini t-${t}"><span class="code" style="font-size:11px">CON</span></div><div class="mid"><div class="t">${esc(d.title)}</div><div class="s">${esc(party(d.chat))} · ${code(d.id)}</div></div><span class="tag tg-${t}">${esc(l)}</span></button>`}).join("")}</div><div class="sec"><h4>Templates</h4>${TEMPLATES.map(t=>`<div class="kv"><span>${t.t}</span><span>${t.c.length} clauses</span></div>`).join("")}<p class="meta">Send one from any chat with the + button.</p></div></div>`},
+  team:()=>status()+hdr("Team and roles")+`<div class="body"><div class="sec"><h4>Members</h4>${TEAM.map(t=>`<div class="kv"><span>${t.n}</span><span class="tag tg-tint">${t.r}</span></div>`).join("")}</div><div class="sec"><h4>Needs the owner's approval</h4>
+    ${tg("rules","disc","Discounts above 10%","Staff quotes wait for you before the buyer sees them.")}${tg("rules","po","Purchase orders above ₹50,000","Staff purchase orders wait for you before the supplier sees them.")}</div></div>`,
+  assistant:()=>{const a=S.ai;return status()+hdr("AI assistant",{sub:"BOC Assistant for Shree Textiles"})+`<div class="body">
+    <div class="sec"><h4>How it replies</h4><div class="seg">${[["off","Off"],["suggest","Suggest, I send"],["auto","Reply for me"]].map(([k,l])=>`<button class="${a.mode===k?"on":""}" data-act="aimode" data-m="${k}">${l}</button>`).join("")}</div><p class="meta">${a.mode==="auto"?"Answers customers on its own within the limits below, and hands the chat to your team when it should.":a.mode==="suggest"?"Drafts a reply in each chat. Nothing goes out until you tap Send.":"Your team answers every message."}</p></div>
+    <div class="sec"><h4>Today</h4><div class="grid2"><div class="tile"><div class="l">Answered</div><div class="v num">${a.answered}</div></div><div class="tile"><div class="l">Handed to your team</div><div class="v num">${a.handed}</div></div></div></div>
+    <div class="sec"><h4>What it knows</h4>${tg("ai.know","catalog","Products and prices",S.products.filter(p=>p.vis!=="Hidden").length+" products, public prices only")}${tg("ai.know","stock","Stock levels","Says in stock or out of stock, never exact wholesale stock")}${tg("ai.know","hours","Hours and location",BIZ.st.hours)}${tg("ai.know","policy","Delivery and returns","Shipping times, charges and the 7-day return policy")}${tg("ai.know","faq","Your saved answers",S.quick.length+" quick replies")}</div>
+    <div class="sec"><h4>What it may do</h4>${tg("ai.perm","prices","Answer price and availability questions","")}${tg("ai.perm","cards","Send product cards","")}${tg("ai.perm","drafts","Start an order for the customer to confirm","")}${tg("ai.perm","paylink","Send payment requests","Off: payment requests always come from a person")}</div>
+    <div class="sec"><h4>Always hands to a person when</h4>${["The customer asks for a discount or to bargain","There is a complaint, return or damaged item","The customer asks for a human","The order is above "+money(a.limit),"It cannot answer twice in a row"].map(x=>`<div class="kv"><span>${x}</span><span>${ic("users","s")}</span></div>`).join("")}<p class="meta">It never offers discounts, accepts returns, signs contracts or changes prices. Customers always see that a reply is automated.</p></div>
+    <div class="sec"><button class="btn full tonal" data-act="trycust">Try it as a customer</button></div></div>`},
+  automations:()=>status()+hdr("Auto-replies and reminders")+`<div class="body"><div class="sec">${tg("auto","greeting","Greeting message","“"+S.greetingText+"”")}${tg("auto","away","Away message","“"+S.awayText+"”")}${tg("auto","remind","Payment reminders","Reminds buyers 3 days before an invoice is due, and on the day.")}${tg("auto","reorder","Low-stock suggestions","Adds a reorder task to Pending when stock reaches its level.")}</div><div class="sec"><button class="btn full tonal" data-act="simnew">Simulate a new customer</button></div></div>`,
+  quick:()=>status()+hdr("Quick replies")+`<div class="body"><div class="sec">${S.quick.map(q=>`<div class="kv" style="display:block"><b style="color:var(--tint)">${q.k}</b><div>${esc(q.t)}</div></div>`).join("")}</div></div>`,
+  broadcast:()=>{const b=S.bc||(S.bc={aud:"All customers",tpl:0});const tpls=["Our Diwali silk collection is here. Reply YES for the lookbook.","New stock: linen shirting in 6 colours, wholesale from ₹6,900 a roll.","This week only: 20% off Chanderi dupattas."];const auds={"All customers":214,"Wholesale buyers":38,"New customers":61};
+    return status()+hdr("Broadcasts",{sub:"Only to contacts who opted in"})+`<div class="body"><div class="sec"><h4>Audience</h4><div class="wchips">${Object.keys(auds).map(a=>`<button class="fc ${b.aud===a?"on":""}" data-act="bcaud" data-a="${a}">${a} · ${auds[a]}</button>`).join("")}</div><div class="lab">Message</div>${tpls.map((t,i)=>`<button class="opt ${b.tpl===i?"on":""}" data-act="bctpl" data-i="${i}"><div class="mid">${esc(t)}</div></button>`).join("")}<button class="btn full" data-act="bcsend" data-n="${auds[b.aud]}" data-t="${esc(tpls[b.tpl])}">Send to ${auds[b.aud]} people</button></div>
+    <div class="sec"><h4>Results</h4>${S.campaigns.slice().reverse().map(c=>`<div class="doc" style="margin-bottom:8px"><p><b>${esc(c.name)}</b> · ${c.aud}${c.done?"":` <span class="tag tg-wait">Sending</span>`}</p><div class="grid4">${[["Sent",c.sent],["Read",c.read],["Clicked",c.click],["Orders",c.orders]].map(x=>`<div><div style="font-size:11px;color:var(--ink2)">${x[0]}</div><div class="num" style="font-weight:700">${x[1]}</div></div>`).join("")}</div></div>`).join("")}</div></div>`},
+  directory:()=>status()+hdr("Find businesses",{sub:"Verified by GSTIN"})+`<div class="body"><div class="sec">${DIR.map((x,i)=>`<div class="item">${av(x.n,PARTY[(i+3)%10],36)}<div class="mid"><div class="t">${esc(x.n)} ${ic("shield","s")}</div><div class="s">${x.cat} · ${x.city} · ${x.r}★</div></div><button class="btn sm tonal" data-act="dirmsg" data-i="${i}">Message</button></div>`).join("")}</div></div>`,
+  verification:()=>status()+hdr("Verification and profile")+`<div class="body"><div class="sec"><h4>Shree Textiles</h4>${verRows(BIZ.st)}</div><div class="sec"><div class="kv"><span>Payout account</span><span>${S.payout.bank} · name matched</span></div><div class="kv"><span>Pickup address</span><span>42 Town Hall Road, Coimbatore 641001</span></div><div class="kv"><span>Trust level</span><span class="tag tg-good">Trusted seller · 1,000+ orders</span></div></div><div class="sec"><button class="btn full tonal" data-act="bizprofile" data-id="st">See what customers see</button></div></div>`,
+  contact:v=>{const c=C(v.id);const docs=Object.values(S.docs).filter(d=>d.chat===c.id);const LB=["New customer","Wholesale","Net 30","VIP","Supplier","Follow up"];
+    return status()+hdr(esc(c.name),{sub:esc(c.acct)})+`<div class="body"><div class="sec" style="display:flex;gap:12px;align-items:center">${av(c.name,c.color,56)}<div><b style="font-size:17px">${esc(c.name)}</b><div style="color:var(--ink2);font-size:13px">${esc(c.acct)}</div></div></div>
+    <div class="sec"><h4>Labels</h4><div class="wchips">${LB.map(l=>`<button class="fc ${c.labels.includes(l)?"on":""}" data-act="label" data-id="${c.id}" data-l="${l}">${l}</button>`).join("")}</div></div>
+    <div class="sec"><h4>Who handles this chat</h4><div class="wchips">${["Nobody","Ravi","Anita","Deepak"].map(n=>`<button class="fc ${(c.assignee||"Nobody")===n?"on":""}" data-act="assign" data-id="${c.id}" data-n="${n}">${n}</button>`).join("")}</div><p class="meta">The person handling a chat gets its notifications. Others on the team can still read it.</p></div>
+    <div class="sec"><h4>History</h4>${docs.slice().reverse().map(d=>{const[t,l]=docState(d);return `<button class="item" data-act="opendoc" data-id="${d.id}"><div class="mini t-${t}"><span class="code" style="font-size:11px">${code(d.id).split(" ")[0]}</span></div><div class="mid"><div class="t">${code(d.id)}</div><div class="s">${KIND[d.kind]}${d.items||d.amount?" · "+money(docTotal(d)):""}</div></div><span class="tag tg-${t}">${esc(l)}</span></button>`}).join("")||`<div class="empty">No documents yet.</div>`}</div></div>`}
+};
+function tg(group,k,title,desc){const obj=group.split(".").reduce((o,p)=>o[p],S);return `<div class="tg"><div class="mid"><b>${title}</b>${desc?`<p>${esc(desc)}</p>`:""}</div><button class="sw ${obj[k]?"on":""}" role="switch" aria-checked="${!!obj[k]}" data-act="toggle" data-g="${group}" data-k="${k}" aria-label="${esc(title)}"></button></div>`}
+
+/* ===== onboarding ===== */
+function obDefaults(){return{phone:"98765 43210",type:null,name:"Meera Nair",city:"Kochi",bizName:"Shree Textiles",bizType:"Proprietorship",cat:"Clothing and textiles",sells:"Both",gstin:"33ABHFS4821K1Z6",gstOk:false,kycOk:false,acct:"5010 0482 1934",ifsc:"KBNK0004821",bankOk:false,upi:"shreetextiles@kbank",addr:"42 Town Hall Road, Coimbatore 641001",hours:"Mon–Sat, 10:00–19:00",color:"#7A2E5C",noGst:false}}
+function obScreen(v){const o=S.ob;const step=v.step;
+  const foot=(label,act,dis=false)=>`<div class="ob-foot"><button class="btn full" data-act="${act}" ${dis?"disabled":""}>${label}</button></div>`;
+  const fld=(k,l,hint="",ph="")=>`<div class="field"><label for="ob-${k}">${l}</label><input id="ob-${k}" data-bind="ob.${k}" value="${esc(o[k])}" placeholder="${ph}">${hint?`<span class="hint">${hint}</span>`:""}</div>`;
+  const prog=n=>`<div class="prog">${[1,2,3,4].map(i=>`<i class="${i<=n?"on":""}"></i>`).join("")}</div>`;
+  const back=hdr("",{back:true});
+  switch(step){
+    case "welcome": return status()+`<div class="welcome"><div class="wgrid">${[["INV","t-good","Paid"],["ORD","t-tint","Shipped"],["CON","t-wait","Sign"],["QT","t-tint","Sent"]].map(x=>`<div class="chip ${x[1]}"><span class="code">${x[0]}</span><small>${x[2]}</small></div>`).join("")}</div><h1 style="font-size:34px;line-height:1.05;margin:0 0 10px;letter-spacing:-.02em">Run your business from one chat.</h1><p style="color:var(--ink2);margin:0 0 24px">Sell, buy, ship, get paid and sign, with every customer and supplier in one place. Or just shop from businesses you can trust.</p><button class="btn full" data-act="ob" data-s="phone">Continue with phone number</button><p class="meta" style="text-align:center">By continuing you agree to the terms and privacy policy.</p></div>`;
+    case "phone": return status()+back+`<div class="body ob"><h1>Your mobile number</h1><p class="lead">We will send a 6-digit code. One number works for your personal account and any business you run.</p><div class="field"><label for="ob-phone">Mobile number</label><div style="display:flex;gap:8px"><input value="+91" style="width:70px;border:1px solid var(--line);border-radius:8px;height:48px;padding:0 12px;background:var(--card)" aria-label="Country code" readonly><input id="ob-phone" data-bind="ob.phone" value="${esc(o.phone)}" inputmode="tel" style="flex:1"></div></div></div>`+foot("Send code","ob\" data-s=\"otp");
+    case "otp": return status()+back+`<div class="body ob"><h1>Enter the code</h1><p class="lead">Sent to +91 ${esc(o.phone)}. In this prototype it fills in by itself.</p><div class="otp">${"482913".split("").map(n=>`<span class="f num">${n}</span>`).join("")}</div><p class="meta">Code verified.</p></div>`+foot("Continue","ob\" data-s=\"type");
+    case "type": return status()+back+`<div class="body ob"><h1>How will you use BOC?</h1><p class="lead">You can add a business later from your profile.</p>
+      <button class="choice ${o.type==="personal"?"on":""}" data-act="obset" data-k="type" data-v="personal"><span class="mini" style="background:var(--tint-soft);color:var(--tint)">${ic("user")}</span><span><b>For myself</b><span>Chat with businesses, shop, pay safely, track orders and sign agreements sent to you.</span></span></button>
+      <button class="choice ${o.type==="business"?"on":""}" data-act="obset" data-k="type" data-v="business"><span class="mini" style="background:#7A2E5C;color:#fff">${ic("store")}</span><span><b>For my business</b><span>Sell, buy, send invoices and quotes, take payments, ship and manage your team. Needs business verification.</span></span></button></div>`+foot("Continue","obtype",!o.type);
+    case "personal": return status()+back+`<div class="body ob"><h1>About you</h1><p class="lead">Businesses see your name and city, never your number unless you share it.</p>${fld("name","Your name")}${fld("city","City","Used to show delivery times")}</div>`+foot("Start using BOC","obdone\" data-v=\"personal");
+    case "b1": return status()+back+prog(1)+`<div class="body ob"><h1>Your business</h1><p class="lead">This is how buyers and suppliers will find you.</p>${fld("bizName","Business name","As customers know it")}
+      <div class="lab">Type of business</div><div class="wchips">${["Proprietorship","Partnership","LLP","Private limited"].map(x=>`<button class="fc ${o.bizType===x?"on":""}" data-act="obset" data-k="bizType" data-v="${x}">${x}</button>`).join("")}</div>
+      <div class="lab">Category</div><div class="wchips">${["Clothing and textiles","Grocery","Pharmacy","Food","Electronics","Services"].map(x=>`<button class="fc ${o.cat===x?"on":""}" data-act="obset" data-k="cat" data-v="${x}">${x}</button>`).join("")}</div>
+      <div class="lab">You sell to</div><div class="wchips">${["Shoppers","Other businesses","Both"].map(x=>`<button class="fc ${o.sells===x?"on":""}" data-act="obset" data-k="sells" data-v="${x}">${x}</button>`).join("")}</div></div>`+foot("Continue","ob\" data-s=\"b2");
+    case "b2": return status()+back+prog(2)+`<div class="body ob"><h1>Verify your business</h1><p class="lead">Verified businesses get a badge, can take payments and are shown first. Buyers see what you verified.</p>
+      ${o.noGst?fld("udyam","Udyam or shop licence number","For businesses without GST","UDYAM-TN-03-0000000"):fld("gstin","GSTIN","We check it against the GST registry")}
+      ${o.gstOk?`<div class="fetched"><b>${o.noGst?"Udyam record found":"Found on the GST registry"}</b>Legal name: SHREE TEXTILES · Proprietorship · Active since 2016 · Coimbatore, Tamil Nadu</div>`:`<button class="btn tonal full" data-act="obverify" data-k="gstOk" style="margin:-4px 0 14px">${o.noGst?"Check Udyam":"Check GSTIN"}</button>`}
+      <button class="fc" data-act="obnogst" style="margin-bottom:18px">${o.noGst?"I have a GSTIN":"I don't have GST"}</button>
+      <div class="lab" style="margin-top:0">Owner identity</div>
+      ${o.kycOk?`<div class="fetched"><b>Identity verified</b>Aadhaar e-KYC · name matches the business records</div>`:`<button class="btn tonal full" data-act="obverify" data-k="kycOk">Verify with Aadhaar OTP</button><p class="meta">BOC stores the verification result, not your Aadhaar number.</p>`}</div>`+foot("Continue","ob\" data-s=\"b3",!(o.gstOk&&o.kycOk));
+    case "b3": return status()+back+prog(3)+`<div class="body ob"><h1>Where should money go?</h1><p class="lead">Customer payments are held by BOC Protect until delivery, then paid to this account the next working day.</p>${fld("acct","Bank account number")}${fld("ifsc","IFSC")}
+      ${o.bankOk?`<div class="fetched"><b>Account verified</b>₹1 deposit confirmed · account holder SHREE TEXTILES matches your GST name</div>`:`<button class="btn tonal full" data-act="obverify" data-k="bankOk" style="margin:-4px 0 14px">Verify with a ₹1 deposit</button>`}
+      ${fld("upi","UPI ID for quick payments","Optional")}</div>`+foot("Continue","ob\" data-s=\"b4",!o.bankOk);
+    case "b4": return status()+back+prog(4)+`<div class="body ob"><h1>Set up your shop</h1><p class="lead">Couriers pick up from here, and customers see your hours.</p>${fld("addr","Pickup address")}${fld("hours","Business hours")}
+      <div class="lab">Your colour</div><p class="meta" style="margin-top:-4px">Your chats, cards and profile wear this colour so customers recognise you.</p><div class="wchips">${["#7A2E5C","#0F7C86","#C0562A","#4A5D23","#5B3A8C","#9A6B12"].map(x=>`<button class="mini" style="background:${x};${o.color===x?"outline:3px solid var(--ink);outline-offset:2px":""}" data-act="obset" data-k="color" data-v="${x}" aria-label="Colour ${x}"></button>`).join("")}</div>
+      <div class="lab">Your first product</div><button class="opt" data-act="obset" data-k="addFirst" data-v="1"><span class="mini" style="background:var(--sunk);color:var(--ink2)">${ic("camera")}</span><div class="mid"><b>Add products now or later</b><span>Take a photo and describe it in one line. The assistant fills in price, options and tax code.</span></div></button></div>`+foot("Finish","obdone\" data-v=\"business");
+    case "done": return status()+`<div class="body ob"><div class="done"><div class="ok">${ic("check")}</div><h1>${o.type==="business"?esc(o.bizName)+" is verified":"You're all set"}</h1><p class="lead">${o.type==="business"?"Customers now see the verified badge on your chats and profile. The demo continues with Shree Textiles' example data.":"Explore verified businesses, chat, and pay with BOC Protect. The demo continues as Meera."}</p></div>
+      ${o.type==="business"?`<div class="sec" style="padding:0">${verRows({lv:{phone:1,gst:!o.noGst,udyam:o.noGst,kyc:1,bank:1},gstin:o.gstin,legal:"SHREE TEXTILES",udyam:o.udyam})}</div>`:""}</div>`+foot(o.type==="business"?"Open my business":"Start exploring","obfinish");
+  }}
+
+/* ===== sheets ===== */
+function sheetWrap(title,body,foot){return `<div class="scrim" data-act="scrim"><div class="sheet" role="dialog" aria-label="${esc(title)}"><div class="handle"></div><div class="sh"><h3>${title}</h3><button class="ib" data-act="closesheet" aria-label="Close">${ic("close")}</button></div><div class="sb">${body}</div>${foot?`<div class="sf">${foot}</div>`:""}</div></div>`}
+function itemPicker(sh,pk){return S.products.map(p=>{const q=sh.sel[p.id]||0;return `<div class="item"><div class="mini" style="background:${p.color}"><span class="code" style="font-size:11px">${p.code}</span></div><div class="mid"><div class="t">${esc(p.name)}</div><div class="s">${money(p[pk])} per ${p.unit} · ${p.stock} in stock</div></div><div class="step"><button data-act="qty" data-p="${p.id}" data-d="-1" aria-label="Fewer">−</button><b>${q}</b><button data-act="qty" data-p="${p.id}" data-d="1" aria-label="More">+</button></div></div>`}).join("")}
+const selItems=(sh,pk)=>Object.entries(sh.sel).filter(([,q])=>q>0).map(([pid,qty])=>({pid,qty,price:P(pid)[pk]}));
+function renderSheet(){const sh=S.sheet,c=sh.chat?C(sh.chat):null;
+  const pk=sh.type==="rfq"||sh.type==="po"?"cost":(c&&c.kind==="b2b"?"whole":"price");
+  const chipset=(key,opts,label,fmt=o=>o)=>`<div class="lab">${label}</div><div class="wchips">${opts.map(o=>`<button class="fc ${sh[key]===o?"on":""}" data-act="sset" data-k="${key}" data-v="${o}">${fmt(o)}</button>`).join("")}</div>`;
+  switch(sh.type){
+    case "plus":{const b=(a,icon,color,l)=>`<button class="tool" data-act="${a}"><span class="ti" style="background:${color}">${ic(icon)}</span>${l}</button>`;
+      return sheetWrap("Send in this chat",`<div class="grid4" style="gap:8px;padding-bottom:12px">${b("s-product","tag","#7B1E3A","Product")}${b("s-quote","file","#2B3A8C","Quote")}${b("s-invoice","file","#2E7D4F","Invoice")}${b("s-paylink","wallet","#9A6B12","Payment request")}${b("s-po","cart","#4A5D23","Purchase order")}${b("s-rfq","users","#0F7C86","Ask suppliers")}${b("s-contract","pen","#5B3A8C","Contract")}${b("s-quick","chat","#6E675C","Quick reply")}</div>`)}
+    case "product": return sheetWrap("Send a product",S.products.filter(p=>p.vis!=="Hidden").map(p=>`<button class="item" data-act="sendproduct" data-p="${p.id}"><div class="mini" style="background:${p.color}"><span class="code" style="font-size:11px">${p.code}</span></div><div class="mid"><div class="t">${esc(p.name)}</div><div class="s">${money(p[pk])} · ${p.stock} in stock</div></div><span class="btn sm tonal">Send</span></button>`).join(""));
+    case "quote": case "invoice": case "po":{const its=selItems(sh,pk),t=totals(its,sh.disc||0);
+      return sheetWrap({quote:"New quotation",invoice:"New invoice",po:"New purchase order"}[sh.type],itemPicker(sh,pk)+(sh.type!=="po"?chipset("disc",[0,5,10,15,20],"Discount",o=>o+"%")+chipset("terms",["Advance","Net 15","Net 30"],"Payment terms"):"")+(sh.type==="quote"&&role()==="staff"&&sh.disc>10&&S.rules.disc?`<p class="meta" style="color:var(--bad)">Above 10%: the owner approves this before the buyer sees it.</p>`:""),
+        `<div class="sum"><div class="meta" style="margin:0">${its.length} items</div><b class="num">${money(t.total)}</b></div><button class="btn" data-act="submit" ${its.length?"":"disabled"}>Send ${sh.type==="po"?"order":sh.type}</button>`)}
+    case "rfq":{const its=selItems(sh,"cost"),sup=S.chats.filter(x=>x.kind==="supplier");
+      return sheetWrap("Ask suppliers for quotes",itemPicker(sh,"cost")+`<div class="lab">Send to</div><div class="wchips">${sup.map(s=>`<button class="fc ${sh.sup.includes(s.id)?"on":""}" data-act="supsel" data-id="${s.id}">${esc(s.name)}</button>`).join("")}</div>`,`<button class="btn" data-act="submit" ${its.length&&sh.sup.length?"":"disabled"}>Send to ${sh.sup.length} suppliers</button>`)}
+    case "paylink": return sheetWrap("Payment request",chipset("amount",[1000,2500,5000,15000],"Amount",o=>money(o))+chipset("note",["Advance for custom order","Balance payment","Alteration charges"],"For"),`<button class="btn" data-act="submit" ${sh.amount?"":"disabled"}>Send request</button>`);
+    case "contract":{const tp=TEMPLATES.find(x=>x.t===sh.tpl);
+      return sheetWrap("New contract",`<div class="lab" style="margin-top:0">Template</div>${TEMPLATES.map(x=>`<button class="opt ${sh.tpl===x.t?"on":""}" data-act="sset" data-k="tpl" data-v="${x.t}"><div class="mid"><b>${x.t}</b><span>${x.c.length} clauses</span></div></button>`).join("")}${chipset("term",["6 months","12 months","24 months"],"Term")}${tp?`<div class="lab">Preview</div><div class="doc"><p><b>${tp.t}</b> between Shree Textiles and ${esc(c.name)}, for ${sh.term}.</p>${tp.c.map((x,i)=>`<p>${i+1}. ${x}</p>`).join("")}</div>`:""}`,`<button class="btn" data-act="submit" ${sh.tpl?"":"disabled"}>Send for signature</button>`)}
+    case "quickpick": return sheetWrap("Quick replies",S.quick.map(q=>`<button class="item" data-act="qrsend" data-k="${q.k}"><div class="mid"><div class="t" style="color:var(--tint)">${q.k}</div><div class="s">${esc(q.t)}</div></div></button>`).join(""));
+    case "compare":{const r=D(sh.rfq),qs=r.quotes.map(D).sort((a,b)=>docTotal(a)-docTotal(b));
+      return sheetWrap("Compare quotes",`<p class="meta" style="margin-top:0">${code(r.id)} · lowest total first</p>`+qs.map((q,i)=>`<div class="doc" style="margin-top:8px"><p><b>${esc(party(q.chat))}</b> ${i===0?`<span class="tag tg-good">Lowest</span>`:""}</p>${itemsOf(q).map(x=>`<div class="li"><span>${esc(x.p.name)} × ${x.qty}</span><span class="num">${money(x.price)}/${x.p.unit}</span></div>`).join("")}<div class="li"><span>Total with GST</span><b class="num">${money(docTotal(q))}</b></div><div class="li"><span>Delivery</span><span>${q.lead} days</span></div><button class="btn sm" style="margin-top:8px" data-act="choose" data-id="${q.id}">Raise purchase order</button></div>`).join(""))}
+    case "sign":{const d=D(sh.doc),me=side();const mine=d.signers.find(s=>me==="biz"?s.me:!s.me);
+      return sheetWrap(esc(d.title),`<div class="doc"><p><b>${esc(d.title)}</b> between Shree Textiles and ${esc(party(d.chat))}, for ${d.term}.</p>${d.clauses.map((x,i)=>`<p>${i+1}. ${esc(x)}</p>`).join("")}<p style="margin-top:10px">${d.signers.map(s=>`${esc(s.who)}: ${s.at?"signed "+s.at:"not signed yet"}`).join("<br>")}</p>${d.status==="signed"?`<p>Fingerprint <span class="num">${d.fp}</span>. Both parties hold an identical copy; any change breaks the fingerprint.</p>`:""}</div><p class="meta">Signing is confirmed by OTP to your registered number.</p>`,
+        mine&&!mine.at?`<button class="btn" data-act="dosign" data-id="${d.id}">Sign with OTP</button>`:`<button class="btn tonal" data-act="closesheet">Close</button>`)}
+    case "pinfo":{const p=P(sh.pid);return sheetWrap(esc(p.name),`<div class="pblock" style="background:${p.color};border-radius:12px"><span class="code">${p.code}</span><small>HSN ${p.hsn}</small></div>${[["Price for shoppers",money(p.price)],["Wholesale",money(p.whole)],["Your cost",money(p.cost)],["Visible to",p.vis],["Reorder below",p.reorder+" "+p.unit]].map(k=>`<div class="kv"><span>${k[0]}</span><span>${k[1]}</span></div>`).join("")}<div class="kv"><span>In stock</span><span class="step"><button data-act="stock" data-p="${p.id}" data-d="-1" aria-label="Fewer">−</button><b>${p.stock}</b><button data-act="stock" data-p="${p.id}" data-d="1" aria-label="More">+</button></span></div>`,`<button class="btn" data-act="reorder" data-id="${p.id}">Reorder from suppliers</button>`)}
+    case "expense": return sheetWrap("Add expense",chipset("cat",["Packaging","Transport","Utilities","Repairs"],"Category")+chipset("amount",[1200,3500,8000,15000],"Amount",o=>money(o)),`<button class="btn" data-act="submit" ${sh.cat&&sh.amount?"":"disabled"}>Save expense</button>`);
+    case "newchat": return sheetWrap("New chat",S.chats.filter(c=>!c.custOnly).map(c=>`<button class="row" data-act="open" data-id="${c.id}">${av(c.name,c.color,36)}<div class="mid"><div class="t">${esc(c.name)}</div></div></button>`).join("")+`<p class="meta">Find new suppliers and buyers in Business, then Find businesses.</p>`);
+    case "order":{const p=P(sh.pid),t=totals([{qty:sh.qty,price:p.price}],0,sh.ship==="exp"?142:78);
+      return sheetWrap("Order from "+BIZ.st.name,`<div class="item" style="border:0"><div class="mini" style="background:${p.color}"><span class="code" style="font-size:11px">${p.code}</span></div><div class="mid"><div class="t">${esc(p.name)}</div><div class="s num">${money(p.price)}</div></div><div class="step"><button data-act="oqty" data-d="-1" aria-label="Fewer">−</button><b>${sh.qty}</b><button data-act="oqty" data-d="1" aria-label="More">+</button></div></div>
+        ${chipset("v",p.vars,"Option")}<div class="lab">Deliver to</div><div class="opt on"><span class="mini" style="background:var(--tint-soft);color:var(--tint)">${ic("pin")}</span><div class="mid"><b>Meera Nair</b><span>14 Marine Drive, Kochi 682031</span></div></div>
+        <div class="lab">Delivery</div>${[["std","Standard · 4–5 days",78],["exp","Express · 2 days",142]].map(([k,l,f])=>`<button class="opt ${sh.ship===k?"on":""}" data-act="sset" data-k="ship" data-v="${k}"><div class="mid"><b>${l}</b></div><span class="num">${money(f)}</span></button>`).join("")}
+        <div class="lab">Pay</div>${[["upi","UPI","Pay now · held until you confirm delivery"],["card","Card","Pay now · held until you confirm delivery"],["cod","Pay on delivery","Cash or UPI to the courier"]].map(([k,l,s])=>`<button class="opt ${sh.pay===k?"on":""}" data-act="sset" data-k="pay" data-v="${k}"><div class="mid"><b>${l}</b><span>${s}</span></div></button>`).join("")}
+        <div class="tot">${[["Item",t.sub],["GST 5%",t.tax],["Delivery",t.ship]].map(x=>`<div class="li"><span>${x[0]}</span><span class="num">${money(x[1])}</span></div>`).join("")}<div class="li"><span>Total</span><span class="num">${money(t.total)}</span></div></div>`,
+        `<button class="btn" data-act="placeorder">${sh.pay==="cod"?"Place order":"Pay "+money(t.total)}</button>`)}
+    case "paying": return sheetWrap("Paying "+money(sh.amount),`<div class="done"><div class="ok">${ic("lock")}</div><p class="meta">Confirming with your UPI app. BOC will hold this money until you confirm delivery.</p></div>`);
+    case "pay":{const d=D(sh.doc),amt=docTotal(d);
+      if(sh.done)return sheetWrap("Payment done",`<div class="done"><div class="ok">${ic("check")}</div><div class="num" style="font-size:24px;font-weight:700">${money(amt)}</div><p class="meta">Paid to ${BIZ.st.name} by ${sh.method}.</p></div>`,`<button class="btn" data-act="closesheet">Back to chat</button>`);
+      return sheetWrap("Pay "+BIZ.st.name,`<div class="tile" style="margin-bottom:12px"><div class="l">${KIND[d.kind]} ${code(d.id)}</div><div class="v num">${money(amt)}</div></div>${[["UPI app","Opens your UPI app"],["UPI ID","meera@okbank"],["Card","Visa •• 2204"],["Net banking","Any Indian bank"]].map(([k,s])=>`<button class="opt ${sh.method===k?"on":""}" data-act="sset" data-k="method" data-v="${k}"><div class="mid"><b>${k}</b><span>${s}</span></div></button>`).join("")}<p class="meta">${ic("lock","s")} Payments go through BOC, never to a personal account.</p>`,`<button class="btn" data-act="dopay" ${sh.busy?"disabled":""}>${sh.busy?"Paying…":"Pay "+money(amt)}</button>`)}
+    case "ship":{const o=D(sh.order),cr=COURIERS.find(x=>x.id===sh.courier);
+      return sheetWrap("Ship "+code(o.id),`<div class="opt"><span class="mini" style="background:var(--tint-soft);color:var(--tint)">${ic("pin")}</span><div class="mid"><b>To ${esc(party(o.chat))}</b><span>${esc(o.addr||"Address on order")}</span></div></div>
+        ${chipset("wt",["0.5 kg","1 kg","2 kg","5 kg"],"Package weight")}<div class="lab">Courier</div>${COURIERS.map(x=>`<button class="opt ${sh.courier===x.id?"on":""}" data-act="sset" data-k="courier" data-v="${x.id}"><span class="mini" style="background:var(--sunk);color:var(--ink2)">${ic("truck")}</span><div class="mid"><b>${x.name}</b><span>${x.eta}</span></div><span class="num">${x.fee?money(x.fee):"Free"}</span></button>`).join("")}
+        ${chipset("slot",["Today 4–7 pm","Tomorrow 10 am–1 pm"],"Pickup")}<p class="meta">Pickup from 42 Town Hall Road, Coimbatore. The label appears in the chat after booking.</p>`,`<button class="btn" data-act="doship">Book ${cr.id==="self"?"self delivery":"pickup"}</button>`)}
+    case "track":{const o=D(sh.order),s=o.ship;return sheetWrap("Tracking "+code(o.id),`<div class="kv"><span>Courier</span><span>${esc(s.courier)}</span></div><div class="kv"><span>AWB</span><span class="num">${s.awb}</span></div><div class="timeline" style="margin-top:14px">${STAGES.map((x,i)=>`<div class="${i<=s.stage?"on":""}"><i></i><span><b>${x}</b><span>${i<=s.stage?(s.times[i]||""):i===4?"Expected "+s.eta:""}</span></span></div>`).join("")}</div>`)}
+    case "issue": return sheetWrap("Report a problem",`<p class="meta" style="margin-top:0">Your payment stays held while this is sorted out.</p>${["Item damaged","Wrong item","Item missing","Not as described"].map(x=>`<button class="opt" data-act="doissue" data-id="${sh.order}" data-v="${x}"><div class="mid"><b>${x}</b></div></button>`).join("")}`);
+  }
+}
+
+/* ===== flows ===== */
+function approvalNeeded(kind,d){return role()==="staff"&&((kind==="quote"&&S.rules.disc&&d.disc>10)||(kind==="po"&&S.rules.po&&docTotal(d)>50000))}
+function afterQuoteSent(d){if(!isBiz())return;sim(d.chat,1100,()=>{d.status="accepted";post(d.chat,"cp",`The prices on ${code(d.id)} work for us. Accepted.`)})}
+function afterPoSent(d){sim(d.chat,1100,()=>{d.status="accepted";post(d.chat,"cp",`Confirmed ${code(d.id)}. Dispatching tomorrow morning.`);sim(d.chat,1600,()=>{d.status="dispatched";post(d.chat,"cp","Dispatched by road. Should reach in 2 days.")})})}
+function payDoc(d,how,by="cp"){d.status="paid";d.paidHow=how;const amt=docTotal(d);post(d.chat,"cp",{type:"payment",amount:amt,ref:d.id,how,dir:"in"});S.months[5][1]+=amt;S.payout.settled+=amt}
+function placeOrder(cid,items,payMethod,shipFee){const o=addDoc({id:nid("ORD"),kind:"order",chat:cid,items,status:"placed",pay:payMethod==="cod"?"cod":"held",method:payMethod==="cod"?"Pay on delivery":payMethod==="card"?"Card":"UPI",shipFee,addr:"Meera Nair, 14 Marine Drive, Kochi 682031"});
+  post(cid,"cp",{type:"doc",ref:o.id});if(o.pay==="held"){S.payout.held+=docTotal(o);post(cid,"cp",{type:"payment",amount:docTotal(o),ref:o.id,how:o.method,dir:"in",held:true})}
+  if(!isBiz())sim(cid,1300,()=>{bizAccept(o);sim(cid,1500,()=>bizShip(o,{courier:"std",wt:"1 kg",slot:"Today 4–7 pm"}))});return o}
+function bizAccept(o){o.status="accepted";o.items.forEach(i=>{const p=P(i.pid);if(p)p.stock-=i.qty});
+  const inv=addDoc({id:nid("INV"),kind:"invoice",chat:o.chat,items:o.items,disc:0,shipFee:o.shipFee,terms:"Order",due:"on receipt",status:o.pay==="held"?"paid":"unpaid",paidHow:o.pay==="held"?o.method+" (held until delivery)":null});o.invoice=inv.id;
+  post(o.chat,"biz",{type:"doc",ref:inv.id,from:isBiz()?null:"Ravi"});post(o.chat,"biz",{type:"text",text:"Thank you! Your order is confirmed and we are packing it today.",from:isBiz()?null:"Ravi"})}
+function bizShip(o,opt){const cr=COURIERS.find(x=>x.id===opt.courier);o.status="shipped";o.ship={courier:cr.name,awb:cr.id==="self"?"SELF-"+o.id.slice(4):String(Math.floor(1e11+Math.random()*9e11)),stage:1,eta:dayPlus(cr.id==="exp"?2:4),times:[now(),now()]};
+  post(o.chat,"sys",{type:"sys",text:`${code(o.id)} picked up by ${cr.name}`});
+  [2,3,4].forEach((st,i)=>setTimeout(()=>{o.ship.stage=st;o.ship.times[st]=now();if(st===4){o.status="delivered";if(o.pay==="cod"){o.pay="released";S.months[5][1]+=docTotal(o);const inv=D(o.invoice);if(inv){inv.status="paid";inv.paidHow="cash on delivery"}}
+      post(o.chat,"sys",{type:"sys",text:`${code(o.id)} delivered`});
+      if(isBiz())sim(o.chat,1200,()=>{cpConfirm(o);setTimeout(()=>{o.rated=5;BIZ.st.reviews++;post(o.chat,"cp","Rated 5 stars: Beautiful saree, exactly like the photo!");render()},900)})}
+    render()},1400*(i+1)))}
+function cpConfirm(o){o.status="completed";if(o.pay==="held"){o.pay="released";const amt=docTotal(o);S.payout.held-=amt;S.payout.settled+=amt;S.months[5][1]+=amt}
+  post(o.chat,"sys",{type:"sys",text:`Delivery confirmed. ${money(docTotal(o))} released to ${BIZ.st.name}.`});post(o.chat,"sys",{type:"rate",ref:o.id})}
+function aiReply(text){const t=text.toLowerCase();
+  if(/discount|cheaper|less|bargain|best price|return|refund|complain|damag|human|person|call me|agent/.test(t))return{handoff:true};
+  const p=S.products.find(p=>p.vis==="Everyone"&&p.name.toLowerCase().split(/[ ,]/).some(w=>w.length>4&&t.includes(w)));
+  if(/time|open|hour|timing|close/.test(t))return{text:`We are open ${BIZ.st.hours}. You can order on BOC any time.`};
+  if(/deliver|ship|courier|reach|kochi/.test(t))return{text:"We ship across India. To Kochi it takes 4–5 days by standard delivery (₹78) or 2 days by express (₹142). Your payment is held until you confirm you received it."};
+  if(p)return{text:`Yes, the ${p.name} is in stock${p.vars.length>1?" in "+p.vars.join(", "):""}. It is ${money(p.price)} plus GST. Here it is:`,pid:p.id};
+  if(/price|cost|rate|how much|stock|available|have/.test(t))return{text:"Here are our most popular pieces right now. Tap Order on any of them, or tell me what you are looking for.",pid:"p1"};
+  return{handoff:true,unsure:true}}
+function respondAsBiz(cid,text){const c=C(cid);
+  if(S.ai.mode==="auto"){const r=aiReply(text);
+    sim(cid,900,()=>{if(r.handoff){S.ai.handed++;c.needsHuman=true;post(cid,"biz",{type:"text",text:r.unsure?"I'm not sure about that, so I've passed your message to the Shree Textiles team. Someone usually replies within an hour.":"That's one for the team. I've passed your chat to a person at Shree Textiles. Someone usually replies within an hour.",auto:"assistant"});
+        if(!isBiz())sim(cid,2600,()=>{c.needsHuman=false;post(cid,"biz",{type:"text",text:/discount|less|cheaper|bargain|best price/.test(text.toLowerCase())?"Hi Meera, Ravi here. For you I can do 5% off the Kanjivaram if you order today. I'll send the price.":"Hi Meera, Ravi here. Tell me what happened and I'll sort it out right away.",from:"Ravi"})})}
+      else{S.ai.answered++;post(cid,"biz",{type:"text",text:r.text,auto:"assistant"});if(r.pid)post(cid,"biz",{type:"product",pid:r.pid,auto:"assistant"})}})}
+  else if(!isBiz())sim(cid,1800,()=>post(cid,"biz",{type:"text",text:"Hi Meera, Ravi here. Let me check and get back to you in a minute.",from:"Ravi"}));
+  else if(S.ai.mode==="suggest"){const r=aiReply(text);c.suggest=r.handoff?null:r.text;if(r.handoff)c.needsHuman=true}}
+
+function submitSheet(){const sh=S.sheet,c=sh.chat?C(sh.chat):null,pk=c&&c.kind==="b2b"?"whole":"price";
+  if(sh.type==="quote"){const d=addDoc({id:nid("QT"),kind:"quote",chat:c.id,items:selItems(sh,pk),disc:sh.disc||0,terms:sh.terms});
+    if(approvalNeeded("quote",d)){d.status="pending_approval";post(c.id,"biz",{type:"doc",ref:d.id});post(c.id,"sys",{type:"sys",text:"Only your team sees this until the owner approves."});toast("Sent to the owner for approval")}
+    else{d.status="sent";post(c.id,"biz",{type:"doc",ref:d.id});afterQuoteSent(d)}}
+  if(sh.type==="invoice"){const d=addDoc({id:nid("INV"),kind:"invoice",chat:c.id,items:selItems(sh,pk),disc:sh.disc||0,terms:sh.terms,due:sh.terms==="Advance"?"on receipt":dayPlus(sh.terms==="Net 15"?15:30),status:"unpaid"});post(c.id,"biz",{type:"doc",ref:d.id});if(sh.terms==="Advance")sim(c.id,1500,()=>{payDoc(d,"UPI");post(c.id,"cp","Paid. Thank you!")})}
+  if(sh.type==="po"){const d=addDoc({id:nid("PO"),kind:"po",chat:c.id,items:selItems(sh,"cost"),disc:0});if(approvalNeeded("po",d)){d.status="pending_approval";toast("Sent to the owner for approval")}else{d.status="sent";afterPoSent(d)}post(c.id,"biz",{type:"doc",ref:d.id})}
+  if(sh.type==="rfq"){const d=addDoc({id:nid("RFQ"),kind:"rfq",items:selItems(sh,"cost"),suppliers:sh.sup.slice(),quotes:[],status:"sent",chat:sh.sup[0]});
+    d.suppliers.forEach((sid,i)=>{post(sid,"biz",{type:"doc",ref:d.id});sim(sid,900+i*1200,()=>{const f=[0.94,1.03,0.98][i%3];const q=addDoc({id:nid("SQ"),kind:"squote",chat:sid,rfq:d.id,lead:[4,2,6][i%3],status:"received",disc:0,items:d.items.map(x=>({...x,price:Math.round(x.price*f/10)*10}))});d.quotes.push(q.id);post(sid,"cp",{type:"doc",ref:q.id});if(d.quotes.length===d.suppliers.length){d.status="quotes_in";toast("All quotes are in. Compare them in Pending.")}})});
+    S.sheet=null;toast(`Sent to ${d.suppliers.length} suppliers`);return}
+  if(sh.type==="paylink"){const d=addDoc({id:nid("PR"),kind:"paylink",chat:c.id,amount:sh.amount,note:sh.note||"Payment",status:"open"});post(c.id,"biz",{type:"doc",ref:d.id});sim(c.id,1800,()=>{d.status="paid";post(c.id,"cp",{type:"payment",amount:d.amount,ref:d.id,how:"UPI",dir:"in"});S.months[5][1]+=d.amount})}
+  if(sh.type==="contract"){const tp=TEMPLATES.find(x=>x.t===sh.tpl);const d=addDoc({id:nid("CON"),kind:"contract",chat:c.id,title:tp.t,term:sh.term,clauses:tp.c,status:"awaiting",signers:[{who:"Shree Textiles",me:true,at:null},{who:c.name,me:false,at:null}],fp:Array.from({length:4},()=>Math.floor(Math.random()*65535).toString(16).padStart(4,"0")).join(" ")});post(c.id,"biz",{type:"doc",ref:d.id});S.sheet={type:"sign",doc:d.id};render();return}
+  if(sh.type==="expense"){S.expenses.push({c:sh.cat,a:sh.amount,d:"Today"});toast("Expense saved")}
+  S.sheet=null;render()}
+
+/* ===== navigation + actions ===== */
+function go(name,extra={}){S.stack.push({name,...extra});S.sheet=null;render()}
+function openChat(id){S.sheet=null;if(cur().name==="chat")S.stack.pop();S.stack.push({name:"chat",id});render()}
+function openDoc(id){const d=D(id);openChat(d.chat||(d.suppliers&&d.suppliers[0]));setTimeout(()=>{const el=document.getElementById("m-"+id);el&&el.scrollIntoView({block:"center"})},30)}
+function setView(v,keep){S.view=v;S.sheet=null;S.filter="All";if(!keep){S.stack=[{name:"tab"}];S.tab="chats"}render()}
+function startOb(type){S.ob=obDefaults();if(type)S.ob.type=type;S.stack=[{name:"ob",step:type==="business"?"b1":"welcome"}];render()}
+const act={
+  tab:e=>{S.tab=e.dataset.t;S.stack=[{name:"tab"}];S.filter="All";render()},
+  back:()=>{S.stack.pop();if(!S.stack.length)S.stack=[{name:"tab"}];render()},
+  open:e=>openChat(e.dataset.id), opendoc:e=>openDoc(e.dataset.id),
+  jump:e=>{const el=document.getElementById("m-"+e.dataset.id);if(el)el.scrollIntoView({block:"center",behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})},
+  jumpsec:e=>{const el=document.getElementById("pg-"+e.dataset.id);el&&el.scrollIntoView({block:"start"})},
+  filter:e=>{S.filter=e.dataset.f;render()}, efilter:e=>{S.efilter=e.dataset.f;render()},
+  go:e=>go(e.dataset.s), profile:e=>go("contact",{id:e.dataset.id}), bizprofile:e=>go("bizprofile",{id:e.dataset.id}),
+  shop:e=>go("shop",{id:e.dataset.id}), pdetail:e=>go("pdetail",{id:e.dataset.id}),
+  cpchat:e=>{const ch=S.chats.find(c=>c.cp==="me"&&c.biz===e.dataset.id);if(ch)return openChat(ch.id);const id="x"+(++SEQ),b=BIZ[e.dataset.id];chat({id,name:"Meera Nair",kind:"customer",biz:e.dataset.id,cp:"me",custOnly:true,color:PARTY[5],msgs:[]});post(id,"biz",{type:"text",text:`Welcome to ${b.name}! How can we help?`,auto:"greeting"});openChat(id)},
+  cpask:e=>{const p=P(e.dataset.id);S.drafts.c1=`Is the ${p.name} available in ${p.vars[0]}?`;openChat("c1")},
+  report:()=>toast("Thanks. BOC's trust team will review this business."),
+  newchat:()=>{S.sheet={type:"newchat"};render()},
+  plus:e=>{S.sheet={type:"plus",chat:e.dataset.id};render()},
+  closesheet:()=>{S.sheet=null;render()}, scrim:()=>{S.sheet=null;render()},
+  "s-product":()=>{S.sheet={...S.sheet,type:"product"};render()},
+  "s-quote":()=>{S.sheet={type:"quote",chat:S.sheet.chat,sel:{},disc:0,terms:C(S.sheet.chat).kind==="b2b"?"Net 30":"Advance"};render()},
+  "s-invoice":()=>{S.sheet={type:"invoice",chat:S.sheet.chat,sel:{},disc:0,terms:C(S.sheet.chat).kind==="b2b"?"Net 30":"Advance"};render()},
+  "s-po":()=>{S.sheet={type:"po",chat:S.sheet.chat,sel:{}};render()},
+  "s-rfq":()=>{const ch=S.sheet.chat;S.sheet={type:"rfq",sel:{},sup:C(ch).kind==="supplier"?[ch]:S.chats.filter(x=>x.kind==="supplier").map(x=>x.id)};render()},
+  "s-paylink":()=>{S.sheet={type:"paylink",chat:S.sheet.chat,amount:0,note:"Balance payment"};render()},
+  "s-contract":()=>{S.sheet={type:"contract",chat:S.sheet.chat,tpl:null,term:"12 months"};render()},
+  "s-quick":()=>{S.sheet={type:"quickpick",chat:S.sheet.chat};render()},
+  qty:e=>{const s=S.sheet.sel,t=S.sheet.type,p=P(e.dataset.p);let v=Math.max(0,(s[p.id]||0)+ +e.dataset.d*(["quote","rfq","po"].includes(t)?5:1));if((t==="quote"||t==="invoice")&&v>p.stock){v=p.stock;toast(`Only ${p.stock} ${p.unit} in stock`)}s[p.id]=v;render()},
+  sset:e=>{const v=e.dataset.v;S.sheet[e.dataset.k]=/^\d+$/.test(v)?+v:v;render()},
+  supsel:e=>{const a=S.sheet.sup,i=a.indexOf(e.dataset.id);i<0?a.push(e.dataset.id):a.splice(i,1);render()},
+  submit:()=>submitSheet(),
+  sendproduct:e=>{const cid=S.sheet.chat,c=C(cid),p=P(e.dataset.p);S.sheet=null;post(cid,"biz",{type:"product",pid:p.id});
+    if(c.kind==="customer"&&c.cp==="me")sim(cid,1000,()=>{post(cid,"cp","This is lovely! I'll take one in maroon. Paying now.");sim(cid,900,()=>placeOrder(cid,[{pid:p.id,qty:1,price:p.price,v:p.vars[0]}],"upi",78))});
+    else if(c.kind==="b2b")sim(cid,1200,()=>post(cid,"cp","Good quality. Send me a quote for 20 at your wholesale rate."));render()},
+  accept:e=>{bizAccept(D(e.dataset.id));render()},
+  decline:e=>{const o=D(e.dataset.id);o.status="cancelled";if(o.pay==="held"){S.payout.held-=docTotal(o);o.pay="refunded"}post(o.chat,"sys",{type:"sys",text:`${code(o.id)} cancelled by the seller. Full refund issued.`});render()},
+  shipsheet:e=>{S.sheet={type:"ship",order:e.dataset.id,courier:"std",wt:"1 kg",slot:"Today 4–7 pm"};render()},
+  doship:()=>{const o=D(S.sheet.order);bizShip(o,S.sheet);S.sheet=null;toast("Pickup booked. Label added to the chat.");render()},
+  track:e=>{S.sheet={type:"track",order:e.dataset.id};render()},
+  confirm:e=>{cpConfirm(D(e.dataset.id));render()},
+  issue:e=>{S.sheet={type:"issue",order:e.dataset.id};render()},
+  doissue:e=>{const o=D(e.dataset.id);S.sheet=null;C(o.chat).needsHuman=true;post(o.chat,"cp",`Problem with ${code(o.id)}: ${e.dataset.v}.`);post(o.chat,"sys",{type:"sys",text:"Payment stays on hold while the business responds."});respondAsBiz(o.chat,"complaint");render()},
+  rate:e=>{const o=D(e.dataset.id),n=+e.dataset.n;o.rated=n;BIZ.st.reviews++;post(o.chat,"cp",`Rated ${n} stars.`);toast("Thanks for rating");render()},
+  cporder:e=>{S.sheet={type:"order",pid:e.dataset.id,qty:1,v:P(e.dataset.id).vars[0],ship:"std",pay:"upi"};render()},
+  oqty:e=>{S.sheet.qty=Math.max(1,Math.min(P(S.sheet.pid).stock,S.sheet.qty+ +e.dataset.d));render()},
+  placeorder:()=>{const sh=S.sheet,p=P(sh.pid);const cid="c1";const fee=sh.ship==="exp"?142:78;
+    if(sh.pay!=="cod"){S.sheet={type:"paying",amount:totals([{qty:sh.qty,price:p.price}],0,fee).total};render();setTimeout(()=>{S.sheet=null;placeOrder(cid,[{pid:p.id,qty:sh.qty,price:p.price,v:sh.v}],sh.pay,fee);toast("Paid. Held by BOC Protect until delivery.");if(!(cur().name==="chat"&&cur().id===cid))openChat(cid);else render()},900);return}
+    S.sheet=null;placeOrder(cid,[{pid:p.id,qty:sh.qty,price:p.price,v:sh.v}],"cod",fee);openChat(cid)},
+  paysheet:e=>{S.sheet={type:"pay",doc:e.dataset.id,method:"UPI app"};render()},
+  dopay:()=>{const sh=S.sheet;sh.busy=true;render();setTimeout(()=>{const d=D(sh.doc);if(d.kind==="paylink"){d.status="paid";post(d.chat,"cp",{type:"payment",amount:d.amount,ref:d.id,how:sh.method,dir:"in"});S.months[5][1]+=d.amount}else payDoc(d,sh.method);sh.busy=false;sh.done=true;render()},900)},
+  cpaccept:e=>{const q=D(e.dataset.id);q.status="accepted";post(q.chat,"cp","Accepted the quote.");render()},
+  cpdecline:e=>{const q=D(e.dataset.id);q.status="declined";post(q.chat,"cp","Declined the quote.");render()},
+  convert:e=>{const q=D(e.dataset.id);const o=addDoc({id:nid("ORD"),kind:"order",chat:q.chat,items:q.items,disc:q.disc,status:"accepted",pay:"unpaid",method:q.terms,shipFee:0,addr:"Arjun Retail, 22 Commercial Street, Bengaluru 560001"});q.status="converted";q.order=o.id;o.items.forEach(i=>P(i.pid).stock-=i.qty);
+    const inv=addDoc({id:nid("INV"),kind:"invoice",chat:q.chat,items:q.items,disc:q.disc,terms:q.terms,due:q.terms==="Advance"?"on receipt":dayPlus(q.terms==="Net 15"?15:30),status:"unpaid"});o.invoice=inv.id;
+    post(q.chat,"biz",{type:"doc",ref:o.id});post(q.chat,"biz",{type:"doc",ref:inv.id});toast(`${code(o.id)} and ${code(inv.id)} created. Stock updated.`);if(q.terms==="Advance")sim(q.chat,1500,()=>{payDoc(inv,"Bank transfer");post(q.chat,"cp","Advance paid.")});render()},
+  remind:e=>{const d=D(e.dataset.id);post(d.chat,"biz",`Gentle reminder: ${code(d.id)} for ${money(docTotal(d))} is due ${d.due}. You can pay from the invoice.`);toast("Reminder sent");sim(d.chat,1500,()=>{payDoc(d,"Bank transfer");post(d.chat,"cp","Done, transferred just now.")});if(cur().name!=="chat")openChat(d.chat);else render()},
+  markpaid:e=>{const d=D(e.dataset.id);d.status="paid";d.paidHow="cash";S.months[5][1]+=docTotal(d);post(d.chat,"sys",{type:"sys",text:`Cash payment of ${money(docTotal(d))} recorded for ${code(d.id)}`});render()},
+  approve:e=>{const d=D(e.dataset.id);d.status="sent";toast("Approved and sent");post(d.chat,"sys",{type:"sys",text:`Owner approved ${code(d.id)}`});d.kind==="quote"?afterQuoteSent(d):afterPoSent(d);if(cur().name!=="chat")openDoc(d.id);else render()},
+  reject:e=>{const d=D(e.dataset.id);d.status="declined";post(d.chat,"sys",{type:"sys",text:`Owner rejected ${code(d.id)}. Ravi can revise it.`});render()},
+  compare:e=>{S.sheet={type:"compare",rfq:e.dataset.id};render()},
+  choose:e=>{const q=D(e.dataset.id),r=D(q.rfq);r.quotes.forEach(id=>{D(id).status=id===q.id?"chosen":"lost"});const po=addDoc({id:nid("PO"),kind:"po",chat:q.chat,items:q.items,disc:0});r.status="closed";r.po=po.id;
+    if(approvalNeeded("po",po)){po.status="pending_approval";toast("Sent to the owner for approval")}else{po.status="sent";afterPoSent(po)}post(q.chat,"biz",{type:"doc",ref:po.id});
+    r.quotes.filter(id=>id!==q.id).forEach(id=>post(D(id).chat,"biz","Thanks for the quote. We have gone with another supplier this time."));openChat(q.chat)},
+  receive:e=>{const po=D(e.dataset.id);po.status="received";po.items.forEach(i=>P(i.pid).stock+=i.qty);const b=addDoc({id:nid("BILL"),kind:"bill",chat:po.chat,amount:Math.round(docTotal(po)),ref:po.id,due:dayPlus(15),status:"unpaid"});po.bill=b.id;
+    post(po.chat,"sys",{type:"sys",text:`Goods received for ${code(po.id)}. Stock updated.`});post(po.chat,"cp",{type:"doc",ref:b.id});toast("Stock updated, bill added");if(cur().name!=="chat")openChat(po.chat);else render()},
+  paybill:e=>{const b=D(e.dataset.id);b.status="paid";post(b.chat,"biz",{type:"payment",amount:b.amount,ref:b.id,how:"Bank transfer",dir:"out"});sim(b.chat,900,()=>post(b.chat,"cp","Payment received, thank you."));toast("Payment sent");render()},
+  review:e=>{S.sheet={type:"sign",doc:e.dataset.id};render()},
+  dosign:e=>{const d=D(e.dataset.id),me=side();d.signers.find(s=>me==="biz"?s.me:!s.me).at=now();S.sheet=null;
+    if(d.signers.every(s=>s.at)){d.status="signed";post(d.chat,"sys",{type:"sys",text:`${code(d.id)} signed by both parties`});toast("Signed by both parties")}
+    else{toast("Signed. Waiting for the other side.");sim(d.chat,1500,()=>{d.signers.find(s=>!s.at).at=now();d.status="signed";post(d.chat,me==="biz"?"cp":"biz","Signed from our side too.");post(d.chat,"sys",{type:"sys",text:`${code(d.id)} signed by both parties`})})}
+    if(cur().name!=="chat")openChat(d.chat);else render()},
+  reorder:e=>{S.sheet={type:"rfq",sel:{},sup:S.chats.filter(x=>x.kind==="supplier").map(x=>x.id)};const p=e.dataset.id&&P(e.dataset.id);if(p)S.sheet.sel[p.id]=Math.max(10,Math.ceil((p.reorder*2-p.stock)/5)*5);render()},
+  pinfo:e=>{S.sheet={type:"pinfo",pid:e.dataset.id};render()},
+  stock:e=>{const p=P(e.dataset.p);p.stock=Math.max(0,p.stock+ +e.dataset.d);render()},
+  addexp:()=>{S.sheet={type:"expense",cat:null,amount:0};render()},
+  send:e=>sendText(e.dataset.id), cpsay:e=>{S.drafts[cur().id]=e.dataset.t;sendText(cur().id)},
+  qrsend:e=>{const q=S.quick.find(x=>x.k===e.dataset.k),cid=S.sheet.chat;S.sheet=null;post(cid,"biz",q.t);render()},
+  qrpick:e=>{const cid=cur().id,q=S.quick.find(x=>x.k===e.dataset.k);S.drafts[cid]=q.t;render();const i=document.getElementById("composer");i&&i.focus()},
+  usesug:e=>{const c=C(e.dataset.id);post(c.id,"biz",{type:"text",text:c.suggest,auto:"assistant"});c.suggest=null;render()},
+  label:e=>{const c=C(e.dataset.id),l=e.dataset.l,i=c.labels.indexOf(l);i<0?c.labels.push(l):c.labels.splice(i,1);render()},
+  assign:e=>{const c=C(e.dataset.id);c.assignee=e.dataset.n==="Nobody"?null:e.dataset.n;toast(c.assignee?`${c.assignee} now handles this chat`:"Nobody handles this chat");render()},
+  toggle:e=>{const obj=e.dataset.g.split(".").reduce((o,p)=>o[p],S);obj[e.dataset.k]=!obj[e.dataset.k];render()},
+  aimode:e=>{S.ai.mode=e.dataset.m;render()},
+  trycust:()=>{setView("customer");openChat("c1");S.drafts.c1="Do you have the Chanderi dupatta? When does it reach Kochi?";render()},
+  simnew:()=>{const id="n"+(++SEQ);chat({id,name:"Kavya Iyer",kind:"customer",color:PARTY[SEQ%10],acct:"Personal account · phone verified · Chennai",labels:["New customer"]});post(id,"cp","Hello! What are your shop timings? And do you have cotton sarees?");
+    if(S.auto.greeting)post(id,"biz",{type:"text",text:S.greetingText,auto:"greeting"});if(S.auto.away)post(id,"biz",{type:"text",text:S.awayText,auto:"greeting"});respondAsBiz(id,"What are your shop timings?");openChat(id)},
+  bcaud:e=>{S.bc.aud=e.dataset.a;render()}, bctpl:e=>{S.bc.tpl=+e.dataset.i;render()},
+  bcsend:e=>{const n=+e.dataset.n;const c={name:e.dataset.t.slice(0,34)+"…",aud:S.bc.aud,sent:0,read:0,click:0,orders:0,done:false};S.campaigns.push(c);toast("Broadcast is going out");let k=0;const h=setInterval(()=>{k++;c.sent=Math.min(n,Math.round(n*k/4));c.read=Math.round(c.sent*.78*k/8);c.click=Math.round(c.read*.24);c.orders=Math.round(c.click*.18);if(k>=8){clearInterval(h);c.done=true}render()},700);render()},
+  dirmsg:e=>{const x=DIR[+e.dataset.i];let c=S.chats.find(c=>c.name===x.n);if(!c){const id="d"+(++SEQ);chat({id,name:x.n,kind:x.k,labels:[x.k==="supplier"?"Supplier":"Wholesale"],color:PARTY[SEQ%10],acct:"Business · GST verified · "+x.city});c=C(id);post(id,"biz","Hi, this is Shree Textiles, Coimbatore. We found you on BOC and would like to work together.");sim(id,1000,()=>post(id,"cp",`Hello! Thanks for reaching out to ${x.n}. Happy to share our catalogue and rates.`))}openChat(c.id)},
+  npset:e=>{S.np[e.dataset.k]=e.dataset.v;render()},
+  addphoto:()=>{S.np.photos=Math.min(3,S.np.photos+1);render()},
+  aifill:()=>{Object.assign(S.np,{name:"Kanchipuram Silk Saree, Bottle Green",desc:"Pure silk with gold zari border and pallu, 6.3 m with blouse piece. Dry clean only.",cat:"Sarees",price:"16000",whole:"13200",moq:"5",hsn:"5007",vars:"Bottle green",stock:"6",reorder:"3",color:"#2E6B5E",photos:Math.max(1,S.np.photos)});toast("Filled from your description. Check the details.");render()},
+  saveproduct:()=>{const f=S.np;if(!f.name||!f.price){toast("Add a name and a price first");return}S.products.push({id:"p"+(++SEQ),name:f.name,code:f.name.split(" ").slice(0,2).map(w=>w.slice(0,2).toUpperCase()).join(" "),hsn:f.hsn||"5007",cat:f.cat,unit:"pc",price:+f.price,whole:+f.whole||+f.price,cost:Math.round(+f.price*0.68),stock:+f.stock||0,reorder:+f.reorder||0,color:f.color,vars:(f.vars||"Standard").split(",").map(s=>s.trim()).filter(Boolean),vis:f.vis,desc:f.desc||""});S.np=null;S.stack.pop();toast("Product saved and live in your catalog");render()},
+  startob:()=>startOb(), startbiz:()=>startOb("business"),
+  ob:e=>{S.stack.push({name:"ob",step:e.dataset.s});render()},
+  obset:e=>{S.ob[e.dataset.k]=e.dataset.v;render()},
+  obtype:()=>{S.stack.push({name:"ob",step:S.ob.type==="personal"?"personal":"b1"});render()},
+  obnogst:()=>{S.ob.noGst=!S.ob.noGst;S.ob.gstOk=false;if(!S.ob.udyam)S.ob.udyam="UDYAM-TN-03-0048213";render()},
+  obverify:e=>{const k=e.dataset.k;e.disabled=true;e.textContent="Checking…";setTimeout(()=>{S.ob[k]=true;render()},800)},
+  obdone:e=>{S.ob.type=e.dataset.v;S.stack.push({name:"ob",step:"done"});render()},
+  obfinish:()=>{const t=S.ob.type;S.ob=null;setView(t==="business"?"owner":"customer");toast(t==="business"?"Welcome to your business on BOC":"Welcome to BOC")},
+  view:e=>setView(e.dataset.v), os:e=>{S.os=e.dataset.v;render()},
+  guide:e=>GUIDE[+e.dataset.i].run()
+};
+function sendText(cid){const v=(S.drafts[cid]||"").trim();if(!v)return;S.drafts[cid]="";const c=C(cid);
+  if(isBiz()){const q=S.quick.find(x=>x.k===v);post(cid,"biz",q?q.t:v);c.needsHuman=false;c.suggest=null;
+    if(c.kind==="team")sim(cid,1200,()=>post(cid,"cp","On it."));else if(!/^\//.test(v))sim(cid,1400,()=>post(cid,"cp",c.kind==="customer"?"Okay, thank you!":"Noted, will get back shortly."))}
+  else{post(cid,"cp",v);if(c.biz==="st")respondAsBiz(cid,v);else sim(cid,1500,()=>post(cid,"biz",c.biz==="qd"?"Offer ends in 10 minutes! Pay to the UPI number now.":"Thanks for your message, we'll reply shortly."))}
+  render()}
+
+/* ===== guide ===== */
+const GUIDE=[
+  {t:"Sign up a business",d:"Phone, OTP, then GSTIN check, owner e-KYC, bank verification and shop setup. This is what earns the verified badge.",icon:"store",color:"#7A2E5C",run:()=>startOb("business")},
+  {t:"Sign up as a shopper",d:"A personal account needs only a phone number. It can chat, buy, pay and sign, but never sell.",icon:"user",color:"#8A3FA0",run:()=>startOb()},
+  {t:"Be the customer: order, pay, track, rate",d:"Meera's phone. Order the saree from the chat, pay with BOC Protect, watch it ship, confirm delivery to release the money.",icon:"bag",color:"#0F7C86",run:()=>{setView("customer");openChat("c1")}},
+  {t:"Check who you are dealing with",d:"Compare the verified textile shop with an unverified store pushing a UPI deal. The profile shows GST, KYC, bank, orders and reviews.",icon:"shield",color:"#2E7D4F",run:()=>{setView("customer");openChat("x1")}},
+  {t:"The AI assistant answers and hands off",d:"As Meera, ask about delivery, then ask for a discount. The assistant answers the first and passes the second to Ravi.",icon:"spark",color:"#2B3A8C",run:()=>{setView("customer");openChat("c1");S.drafts.c1="How long does delivery to Kochi take?";render()}},
+  {t:"Sell and ship as the owner",d:"Send Meera a product. She orders and pays, you accept, pick a courier and book pickup. Tracking updates in the chat.",icon:"truck",color:"#C0562A",run:()=>{setView("owner");openChat("c1")}},
+  {t:"Add a product",d:"Describe it in one line and the assistant fills name, price, options and HSN. Choose who can see it.",icon:"tag",color:"#7B1E3A",run:()=>{setView("owner");S.tab="biz";S.stack=[{name:"tab"},{name:"catalog"},{name:"addproduct"}];render()}},
+  {t:"Wholesale quote on credit",d:"Arjun Retail wants 20 rolls. Send a quote with Net 30. When he accepts, one tap makes the order and GST invoice.",icon:"file",color:"#2B3A8C",run:()=>{setView("owner");openChat("c2")}},
+  {t:"Staff discount needs approval",d:"As Ravi, quote 15% off. It waits for the owner. Switch back to Owner and approve it from Pending.",icon:"users",color:"#4A5D23",run:()=>{setView("staff");openChat("c2")}},
+  {t:"Restock from three suppliers",d:"Low stock in Pending. Request quotes from all suppliers, compare, raise the PO and receive the goods.",icon:"cart",color:"#9A6B12",run:()=>{setView("owner");S.tab="pending";render()}},
+  {t:"Countersign a contract",d:"Nisha Boutique signed a supply agreement. Review and sign with OTP. Both copies carry the same fingerprint.",icon:"pen",color:"#5B3A8C",run:()=>{setView("owner");openChat("c7")}},
+  {t:"Money, payouts and the ledger",d:"Money held by BOC Protect, payouts to the bank, who owes you and who you owe.",icon:"wallet",color:"#2E7D4F",run:()=>{setView("owner");S.tab="biz";S.stack=[{name:"tab"},{name:"money"}];render()}}
+];
+document.getElementById("flows").innerHTML=GUIDE.map((g,i)=>`<button class="flow" data-act="guide" data-i="${i}"><span class="ft" style="background:${g.color}">${ic(g.icon)}</span><span><h3>${g.t}</h3><p>${g.d}</p></span>${ic("chevr")}</button>`).join("");
+
+/* ===== render ===== */
+const root=document.getElementById("app");
+function render(){
+  const v=cur();let h;
+  if(v.name==="tab"){const T=isBiz()?{chats:chatList,pending:pendingView,biz:bizView,more:moreView}:{chats:chatList,explore:exploreView,orders:ordersView,me:meView};if(!T[S.tab])S.tab="chats";h=T[S.tab]()}
+  else if(v.name==="chat")h=chatView(v);else if(v.name==="ob")h=obScreen(v);else h=screens[v.name](v);
+  const b0=root.querySelector(".body"),same=root.dataset.view===JSON.stringify(v)&&v.name!=="chat",st=b0&&same?b0.scrollTop:0;
+  const focused=document.activeElement&&root.contains(document.activeElement)?document.activeElement.id:null;
+  root.className="os-"+S.os;
+  root.innerHTML=h+(S.sheet?renderSheet():"")+(S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:"");
+  root.dataset.view=JSON.stringify(v);
+  if(v.name==="chat"){const b=document.getElementById("chatbody");if(b)b.scrollTop=b.scrollHeight}else{const b=root.querySelector(".body");if(b&&st)b.scrollTop=st}
+  if(focused){const el=document.getElementById(focused);if(el&&el.tagName==="INPUT"){el.focus();try{el.setSelectionRange(el.value.length,el.value.length)}catch(e){}}}
+  document.getElementById("seg-view").innerHTML=[["owner","Owner"],["staff","Staff (Ravi)"],["customer","Customer (Meera)"]].map(([k,l])=>`<button class="${S.view===k?"on":""}" data-act="view" data-v="${k}" aria-pressed="${S.view===k}">${l}</button>`).join("");
+  document.getElementById("seg-os").innerHTML=[["android","Android"],["ios","iPhone"]].map(([k,l])=>`<button class="${S.os===k?"on":""}" data-act="os" data-v="${k}" aria-pressed="${S.os===k}">${l}</button>`).join("");
+}
+document.addEventListener("click",e=>{const el=e.target.closest("[data-act]");if(!el)return;if(el.dataset.act==="scrim"&&e.target!==el)return;const f=act[el.dataset.act];if(f){e.preventDefault();f(el)}});
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.dataset.bind){const[o,k]=t.dataset.bind.split(".");S[o][k]=t.value;return}
+  if(t.id==="q"){S.q=t.value;render();return}
+  if(t.id==="composer"){const cid=t.dataset.id;S.drafts[cid]=t.value;const box=document.getElementById("qrbox");const v=t.value;
+    if(isBiz()&&v.startsWith("/")){const m=S.quick.filter(q=>q.k.startsWith(v));box.innerHTML=m.length?`<div class="qr">${m.map(q=>`<button data-act="qrpick" data-k="${q.k}"><b>${q.k}</b>${esc(q.t)}</button>`).join("")}</div>`:""}else box.innerHTML=""}});
+document.addEventListener("keydown",e=>{if(e.target.id==="composer"&&e.key==="Enter"){e.preventDefault();sendText(e.target.dataset.id)}if(e.key==="Escape"&&S.sheet){S.sheet=null;render()}});
+render();
+</script>
+<script src="tests/runner.js"></script>
+<script src="shared.js"></script>
+<script src="app-ext.js"></script>
