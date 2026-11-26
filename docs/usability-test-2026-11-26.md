@@ -82,3 +82,7 @@ Method: persona walkthroughs in a real browser, every finding seen on screen or 
 | P2 | Create order from a message | Sunil |
 | P2 | Header labels and truncation | All |
 | P3 | Minor items 12–18 | Various |
+
+## Status (2026-11-26)
+
+All items above are fixed in the prototype: P0 and P1 in `prototype/polish.js`, P2, P3 and the field gaps (app lock, print or share bills, quick counter bill, offline notice) in `prototype/polish2.js`. Not yet measured: performance on a budget Android phone, and full-screen translation beyond the main buttons and labels.
