@@ -358,7 +358,7 @@ window.render=render=function(){if(rendering)return;rendering=true;try{syncBroad
     document.getElementById("seg-view").innerHTML="";}
   else _render();
   document.getElementById("seg-os").innerHTML=[["android","Android"],["ios","iPhone"],["web","Web page"]].map(([k,l])=>{const on=S.frame==="web"?k==="web":S.os===k&&k!=="web";return `<button class="${on?"on":""}" data-act="frame" data-v="${k}" aria-pressed="${on}">${l}</button>`}).join("");
-  if(!window.__testing&&!remote)saveApp()}finally{rendering=false}};
+  if(!window.__testing&&!window.__shot&&!remote)saveApp()}finally{rendering=false}};
 document.getElementById("lo").textContent="Show it on";
 
 /* ---------- 13. guide flows for every business type ---------- */
@@ -379,7 +379,7 @@ document.getElementById("flows").innerHTML=GUIDE.map((g,i)=>`<button class="flow
 {const f=document.querySelector(".guide .foot");if(f)f.insertAdjacentHTML("beforeend",` <button class="btn sm ghost" data-act="resetdemo" style="margin-top:8px">Reset demo</button> <a href="admin.html" style="margin-left:8px">Open the BOC admin console</a>`)}
 
 /* ---------- 14. boot: restore saved demo, follow admin changes ---------- */
-if(!window.__testing){const saved=BOCStore.load();if(saved&&saved.app){Object.assign(S,saved.app);if(saved.app.seq)SEQ=saved.app.seq}}
+if(!window.__testing&&!new URLSearchParams(location.search).get("shot")){const saved=BOCStore.load();if(saved&&saved.app){Object.assign(S,saved.app);if(saved.app.seq)SEQ=saved.app.seq}}
 /* another tab changed storage: redraw from the admin data without writing this tab's state back (avoids two tabs ping-ponging);
    a cleared store means someone pressed Reset demo, so start over */
 let remote=false;

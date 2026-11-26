@@ -4,6 +4,7 @@ A clickable web simulation of BOC, one chat app where Indian businesses of every
 
 - App: `prototype/index.html`  
 - Admin console: `prototype/admin.html`  
+- Every screen at once: `prototype/suite.html`  
 - Product brief: `PRODUCT.md`, design system: `DESIGN.md`, specs and plans: `docs/`
 
 Run locally: `node tools/serve.mjs` then open http://127.0.0.1:5174

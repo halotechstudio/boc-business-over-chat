@@ -17,14 +17,6 @@ colors:
     good: "#1E7A47"
     amber: "#A86A12"
     bad: "#B3261E"
-  dark:
-    ground: "#071D21"
-    card: "#0C2A2F"
-    sunk: "#12353B"
-    line: "#1F474D"
-    ink: "#E7F0F0"
-    ink2: "#9DB2B4"
-    accent: "#ABFFAE"
   data: ["#6FA3D6", "#F0D46A", "#C9B48F", "#7FCB8A", "#B9B1E8", "#E9A98B"]
 typography:
   ui: "Inter 300/400/500, one family; tabular figures on"
@@ -62,6 +54,18 @@ Calm over clever. A deep teal-black brand colour, one mint accent, light type, a
 - **Document card:** head row (code left, status right in text colour; mint fill when the viewer must act) → kind label → line items on hairlines → large light total → action row split by hairlines, primary action mint.
 - **Bottom bar:** jet, five items, active item mint with a 2px top indicator.
 - **Admin console:** jet sidebar with mint active marker, light title 32px, hairline tables with a dark header rule, KPI tiles with large light figures, status as coloured text.
+
+## Light only
+
+BOC ships one light theme. No dark mode (founder's call, 2026-11-26).
+
+## Contacts, labels and CRM
+
+- Labels are coloured pills (11% tint of the label colour, text in the colour) on chat rows, the chat header and the contact record. Users create, recolour and delete labels.
+- Chat filters include every label in use plus Follow up.
+- Contact record: stage (Lead, Talking, Quoted, Won, Repeat, Lost), labels, bought so far, owes you, credit terms, follow-up date, team notes, documents.
+- Contacts board: stage counts, label filter, broadcast to a label.
+- "Waiting on you" on Chats is a dark card with readable rows (action, party, code, amount), not cut-off chips.
 
 ## Platform adaptation
 

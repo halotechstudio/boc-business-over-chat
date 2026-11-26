@@ -192,3 +192,117 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .problems button:first-child{border-top:0}
 .problems b{font-weight:500;display:block}.problems b.bad{color:var(--bad)}
 .problems small{color:var(--ink2)}
+
+/* ===== round 4: friendlier lists, readable chips, contact labels and CRM ===== */
+.big{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sbar{display:flex;align-items:center;gap:8px;margin:4px 16px 12px;padding:0 12px;height:44px;background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--ink2)}
+.sbar input{flex:1;border:0;background:none;font:inherit;color:var(--ink);outline:0;min-width:0}
+.frow{display:flex;gap:6px;overflow-x:auto;padding:0 16px 12px;scrollbar-width:none}
+.frow::-webkit-scrollbar{display:none}
+.frow .fc{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:17px;font-size:13.5px}
+.ld{display:inline-block;width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.fc.on .ld{box-shadow:0 0 0 1.5px #fff}
+.linkbtn{border:0;background:none;color:var(--ink);font:inherit;font-weight:500;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line);padding:6px 0;cursor:pointer}
+
+/* waiting on you: readable rows instead of cut-off chips */
+.needs{margin:0 16px 14px;background:var(--jet);color:#fff;border-radius:14px;overflow:hidden}
+.needs-h{display:flex;justify-content:space-between;align-items:center;padding:14px 16px 6px}
+.needs-h h2{margin:0;font-size:15px;font-weight:500}
+.needs-h h2 .num{display:inline-grid;place-items:center;min-width:22px;height:22px;margin-left:6px;padding:0 6px;border-radius:11px;background:var(--mint);color:var(--jet);font-size:12.5px;font-weight:600}
+.needs .linkbtn{color:var(--mint);text-decoration-color:rgba(171,255,174,.4)}
+.needs .needs-i{color:#fff;border-top:1px solid rgba(255,255,255,.1)}
+.needs .needs-i small{color:#A9C3C6}
+.needs .ni{background:rgba(255,255,255,.08);color:var(--mint)}
+.needs-i{display:flex;align-items:center;gap:12px;width:100%;min-height:58px;padding:9px 16px;border:0;background:none;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.needs-i .nt{flex:1;min-width:0;display:grid}
+.needs-i b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.needs-i small{color:var(--ink2);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.needs-i .na{font-size:15px}
+.needs-i>svg{color:var(--ink2);flex:0 0 auto}
+.ni{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--sunk);color:var(--ink);flex:0 0 auto}
+.ni.bad{background:var(--bad-soft);color:var(--bad)}
+.needs .ni.bad{background:#5A1D1A;color:#FFB4AB}
+.glist{margin:0 16px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.glist>*+*{border-top:1px solid var(--line)}
+.glist .btn.sm{min-height:34px;padding:0 12px}
+.st-good{color:var(--good)!important}.st-bad{color:var(--bad)!important}.st-tint{color:var(--amber)!important}.st-wait{color:var(--ink)!important;font-weight:500}
+
+/* chat rows */
+.clist{background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.crow{display:flex;align-items:flex-start;gap:12px;width:100%;padding:12px 16px;border:0;background:none;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.crow+.crow{border-top:1px solid var(--line)}
+.crow:hover{background:var(--ground)}
+.crow .av{border-radius:50%!important;flex:0 0 auto}
+.crow .cm{flex:1;min-width:0;display:grid;gap:2px}
+.crow .cn{display:flex;align-items:center;gap:6px}
+.crow .cn b{font-weight:500;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow .cn time{margin-left:auto;font-size:12px;color:var(--ink2);flex:0 0 auto}
+.crow .cp{font-size:13.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow.unread .cp{color:var(--ink)}
+.crow.unread .cn b{font-weight:600}
+.crow .cl{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.cu{align-self:center;min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--mint);color:var(--jet);display:grid;place-items:center;font-size:12px;font-weight:600}
+.cf{align-self:center;color:var(--amber)}
+.lp{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:11px;font-size:11.5px;font-weight:500;color:var(--lc);background:color-mix(in srgb,var(--lc) 11%,var(--card));white-space:nowrap}
+.lp.more{--lc:var(--ink2)}
+.empty-s{display:grid;gap:4px;padding:28px 16px;text-align:center;color:var(--ink2)}
+.empty-s b{color:var(--ink);font-weight:500}
+.fab{position:absolute;right:18px;bottom:84px;width:56px;height:56px;border-radius:16px;display:grid;place-items:center;z-index:5}
+.os-ios .fab{bottom:96px}
+
+/* header strip chips: auto width, no truncation */
+.hstrip{gap:6px}
+.hstrip .chip{flex:0 0 auto;width:auto;max-width:none;padding:6px 10px}
+.hstrip .chip small{white-space:nowrap}
+.hlabels{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px 16px;background:var(--card);border-bottom:1px solid var(--line)}
+.hlabels .linkbtn{margin-left:auto;font-size:13px}
+
+/* contact / CRM */
+.phead{display:flex;gap:14px;align-items:center;padding:16px}
+.phead .av{border-radius:50%!important}
+.phead h2{margin:0;font-size:24px;font-weight:300;letter-spacing:-.02em}
+.phead p{margin:2px 0 0;color:var(--ink2);font-size:13px}
+.qa{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px}
+.qa button{display:grid;justify-items:center;gap:4px;padding:10px 4px;border:1px solid var(--line);border-radius:12px;background:var(--card);font:inherit;font-size:12.5px;color:var(--ink);cursor:pointer}
+.qa button:first-child{background:var(--mint);border-color:var(--mint);color:var(--jet)}
+.stages{display:flex;gap:4px;padding:0 16px;overflow-x:auto}
+.stages button{flex:1 0 auto;height:36px;padding:0 10px;border:1px solid var(--line);background:var(--card);font:inherit;font-size:13px;color:var(--ink2);cursor:pointer;border-radius:8px}
+.stages button.on{background:var(--jet);border-color:var(--jet);color:#fff}
+.stages button.on.lost{background:var(--bad);border-color:var(--bad)}
+.lwrap{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px}
+.muted{color:var(--ink2)}
+.stat2{border-radius:0}
+.stat2>div:first-child{border-radius:12px 0 0 12px}.stat2>div:last-child{border-radius:0 12px 12px 0}
+.notes{margin:0 16px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.nt1{padding:10px 14px;border-bottom:1px solid var(--line)}
+.nt1 p{margin:0}.nt1 small{color:var(--ink2)}
+.nadd{display:flex;gap:8px;padding:10px}
+.nadd input{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:8px;padding:0 10px;font:inherit;background:var(--ground);color:var(--ink)}
+.stagebar{display:flex;gap:6px;overflow-x:auto;padding:12px 16px;scrollbar-width:none}
+.stagebar button{flex:0 0 auto;display:grid;justify-items:start;gap:2px;min-width:78px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font:inherit;color:var(--ink2);cursor:pointer;text-align:left}
+.stagebar button b{font-size:20px;font-weight:300;color:var(--ink)}
+.stagebar button.on{background:var(--jet);border-color:var(--jet);color:#A9C3C6}.stagebar button.on b{color:#fff}
+.lpick{display:grid;gap:6px}
+.lpick button{display:flex;align-items:center;gap:10px;height:46px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:inherit;color:var(--ink);cursor:pointer;text-align:left}
+.lpick button svg{margin-left:auto}
+.lpick button.on{border-color:var(--jet);box-shadow:inset 0 0 0 1px var(--jet)}
+.lrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.lrow .swatches{display:flex;gap:4px;margin-left:auto}
+.lrow .swatches button{width:18px;height:18px;border-radius:50%;border:0;cursor:pointer;padding:0}
+.lrow .swatches button.on{box-shadow:0 0 0 2px var(--card),0 0 0 3.5px var(--ink)}
+
+/* softer, friendlier corners on cards and sheets (was 3px everywhere) */
+.m,.m.card{border-radius:14px}
+.m.card{overflow:hidden}
+.btn,.os-ios .btn{border-radius:10px;min-height:44px}
+.sheet,.os-ios .sheet{border-radius:20px 20px 0 0}
+.banner{border-radius:12px}
+.composer input{border-radius:22px;padding-left:16px}
+.round{border-radius:50%}
+.score,.duelist,.problems{border-radius:14px;overflow:hidden}
+.tmap{border-radius:12px;overflow:hidden}
+.dash-actions button:first-child{border-radius:10px 0 0 10px}.dash-actions button:last-child{border-radius:0 10px 10px 0}
+.tool{border-radius:0}
+.grid4{border-radius:14px;overflow:hidden}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .needs{background:var(--sunk)}}
+:root[data-theme="dark"] .needs{background:var(--sunk)}

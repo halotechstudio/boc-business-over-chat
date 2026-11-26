@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -275,6 +275,7 @@ function render(){const db=DB(),c=counts(db),allowed=ROLES[A.role];if(!allowed.i
   const active=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.bind;
   document.getElementById("main").innerHTML=`<div class="top"><div><h1>${SECTIONS[A.section]}</h1><p>BOC team console. Every action is logged. Example data.</p></div><div class="row"><label class="role" for="role">Signed in as<select id="role">${db.staff.map(s=>`<option value="${esc(s.name)}" ${A.who===s.name?"selected":""}>${esc(s.name)} · ${esc(s.role)}</option>`).join("")}</select></label>${B("reset","Reset demo","ghost")}<a href="index.html">Open the app</a></div></div>`+V[A.section](db);
   if(active){const el=document.querySelector(`[data-bind="${active}"]`);if(el){el.focus();if(el.setSelectionRange&&el.value!=null)try{el.setSelectionRange(el.value.length,el.value.length)}catch(e){}}}}
+{const Q=new URLSearchParams(location.search);if(Q.get("who")){A.who=Q.get("who");A.role=DB().staff.find(s=>s.name===A.who).role}if(Q.get("section"))A.section=Q.get("section")}
 BOCStore.subscribe(()=>render());
 render();
 </script>
