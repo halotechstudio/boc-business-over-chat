@@ -49,7 +49,7 @@ Calm over clever. A deep teal-black brand colour, one mint accent, light type, a
 ## Structure
 
 - **Hairline grid:** rows, table cells, document card sections and tool tiles are separated by 1px lines; tiles share borders.
-- **Corners 3px** everywhere (buttons, inputs, sheets). Avatars are near-square.
+- **Corners:** 10px buttons and inputs, 14px cards and lists, 20px sheet tops, round avatars and counts, pill-shaped filters and labels. Hairline tiles inside a card stay square.
 - **Business home:** large title + AI assistant pill → tabs (Sales, Purchases, Team) → year total → category treemap → Add product / My orders → health score card (grade, what's left, mint CTA) → Money due (date strip + list grouped by collect/pay) → analytics tiles → problems list → all tools.
 - **Document card:** head row (code left, status right in text colour; mint fill when the viewer must act) → kind label → line items on hairlines → large light total → action row split by hairlines, primary action mint.
 - **Bottom bar:** jet, five items, active item mint with a 2px top indicator.
