@@ -1,0 +1,14 @@
+/* Usability fixes from the 2026-11-26 persona test. */
+test("paperclip document menu knows the chat and sends a bill",()=>{setView("owner");openChat("c1");act.plus({dataset:{}});eq(S.sheet.chat,"c1");
+  act.ckbill();eq(S.sheet.type,"invoice");S.sheet.sel={p4:2};const n=C("c1").msgs.length;submitSheet();ok(C("c1").msgs.length>n,"bill posted")});
+test("bill with a typed price and a hand-typed line",()=>{openChat("c1");act.ckbill();S.sheet.sel={p4:1};S.sheet.px={p4:2000};S.sheet.custom=[{name:"Fall and pico",qty:1,price:150}];const before=new Set(Object.keys(S.docs));submitSheet();
+  const d=Object.values(S.docs).find(x=>!before.has(x.id)&&x.kind==="invoice");eq(d.items.length,2);eq(d.items[0].price,2000);eq(d.items[1].name,"Fall and pico")});
+test("bill with only hand-typed items",()=>{openChat("c1");act.ckbill();S.sheet.custom=[{name:"Alteration",qty:1,price:300}];const before=new Set(Object.keys(S.docs));submitSheet();ok(Object.values(S.docs).some(x=>!before.has(x.id)&&x.items&&x.items[0].name==="Alteration"))});
+test("search filters the invoice product list",()=>{openChat("c2");act.ckbill();S.sheet.q="linen";render();const n=document.querySelectorAll(".sheet .ib-item").length;eq(n,1);S.sheet=null});
+test("shoppers see GST-inclusive prices and a breakdown",()=>{setView("customer");eq(shopPrice(P("p1")),19425);S.sheet={type:"order",pid:"p1",qty:1,v:"Maroon",ship:"std",pay:"upi"};render();const h=document.querySelector(".sheet").innerText;ok(h.includes("19,425"),"incl price");ok(/Includes GST/.test(h));ok(h.includes("19,503"),"total");S.sheet=null;
+  go("pdetail",{id:"p1"});ok(document.getElementById("app").innerText.includes("19,425"));S.stack=[{name:"tab"}]});
+test("leading 0 and +91 accepted",()=>{setView("owner");ok(chatWithNumber("098430 12345").id);ok(chatWithNumber("+91-98430-12345").id);eq(chatWithNumber("098430 12345").id,chatWithNumber("9843012345").id)});
+test("phone contacts pick opens a saved chat",()=>{setView("owner");act.ckpbpick({dataset:{i:"0"}});eq(cur().name,"chat");eq(C(cur().id).name,"Anand Tailors")});
+test("waiting-on-you is one line so chats stay visible",()=>{setView("owner");S.tab="chats";S.stack=[{name:"tab"}];render();ok(document.querySelector(".needs-bar"));ok(!document.querySelector("section.needs"))});
+test("Hindi and Tamil switch the app chrome",()=>{setView("owner");act.lang({dataset:{v:"hi"}});ok(document.querySelector(".nav").innerText.includes("चैट"));act.lang({dataset:{v:"ta"}});ok(document.querySelector(".nav").innerText.includes("அரட்டைகள்"));act.lang({dataset:{v:"en"}});ok(document.querySelector(".nav").innerText.includes("Chats"))});
+test("customer chat menu hides purchase documents",()=>{openChat("c1");act.plus({dataset:{}});ok(!document.querySelector('.sheet [data-act="s-po"]'));openChat("c3");act.plus({dataset:{}});ok(document.querySelector('.sheet [data-act="s-po"]'));S.sheet=null});

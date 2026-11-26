@@ -141,3 +141,40 @@
 .m.card .ck-mm{top:6px;right:6px}
 .av:empty::before{content:"+91";font-size:.62em;font-weight:700;color:#fff}
 .pl-h span{display:grid}.pl-who{font-size:12.5px;color:var(--ink2);font-weight:500}
+
+/* ===== usability fixes 2026-11-26 ===== */
+.px-brk{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--card);box-shadow:var(--sh);display:grid;gap:6px;font-size:14px}
+.px-brk div{display:flex;justify-content:space-between;gap:10px}.px-brk .sub{color:var(--ink2);font-size:13px}
+.px-brk .tot{border-top:1px solid var(--sunk);padding-top:8px;font-weight:700;font-size:16px}
+.ib-search{display:flex;align-items:center;gap:8px;height:46px;padding:0 12px;margin-bottom:8px;border-radius:12px;background:var(--card);box-shadow:var(--sh)}
+.ib-search input{flex:1;border:0;background:none;font:inherit;font-size:15px;color:var(--ink);outline:0;min-width:0}
+.ib-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--card);margin-bottom:6px}
+.ib-item.on{box-shadow:inset 0 0 0 1.5px #1E9E45}
+.ib-m{flex:1;min-width:0;display:grid}.ib-m b{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ib-m small{color:var(--ink2);font-size:12.5px}
+.ib-px{display:flex;align-items:center;gap:2px;height:40px;padding:0 6px;border-radius:10px;background:var(--sunk);font-size:14px}
+.ib-px input{width:60px;border:0;background:none;font:inherit;font-weight:600;color:var(--ink);outline:0;text-align:right}
+.ib-q{display:flex;align-items:center;border-radius:10px;background:var(--sunk)}
+.ib-q button{width:34px;height:40px;border:0;background:none;font-size:18px;cursor:pointer;color:var(--ink)}
+.ib-q input{width:38px;height:40px;border:0;background:var(--card);text-align:center;font:inherit;font-weight:700;font-size:15px;color:var(--ink);border-radius:8px}
+.ib-add{display:flex;gap:6px}.ib-add input{min-width:0;height:44px;border:0;border-radius:10px;padding:0 10px;background:var(--card);box-shadow:var(--sh);font:inherit;font-size:15px;color:var(--ink)}
+.ib-add input:first-child{flex:2}.ib-add input:nth-child(2){flex:1}
+.needs-bar{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:0 16px 12px;padding:10px 14px;border:0;border-radius:16px;background:var(--jet);color:#fff;font:inherit;text-align:left;cursor:pointer}
+.needs-bar span:nth-child(2){flex:1;min-width:0;display:grid}.needs-bar b{font-weight:600;font-size:15px}
+.needs-bar small{color:#B6B7BC;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nb-c{min-width:32px;height:32px;border-radius:10px;background:var(--mint);color:var(--jet);display:grid;place-items:center;font-weight:700}
+.lang-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 16px 12px;padding:10px 12px;border-radius:14px;background:var(--card);box-shadow:var(--sh)}
+.lang-row>span{flex:1;font-weight:600}
+.lang-row button{height:38px;padding:0 12px;border:0;border-radius:10px;background:var(--sunk);font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.lang-row button.on{background:var(--jet);color:#fff}
+.ck-stories{padding-bottom:10px}.ck-ring{width:54px;height:54px}.ck-ring .av{width:46px!important;height:46px!important}
+/* bigger text and tap targets for older eyes and budget phones */
+.frow .fc,.fc{min-height:40px;font-size:14px}
+.lp{height:24px;font-size:12px}
+.crow .cn b{font-size:16px}.crow .cp{font-size:14.5px}.crow .cn time{font-size:12.5px}
+.needs-i small,.pg-m small,.rv-h small,.ck-fm small{font-size:13px}
+.pg-gh h2,.secttl h3,.dash-total .l,.pg-hero .l,.stat2 .l,.score .l,.lab,.sec h4{font-size:12px!important}
+.nav button,.os-ios .nav button{font-size:11.5px}
+.m{font-size:15px}.time{font-size:11.5px}
+.meta{font-size:13px}
+.ck-story{font-size:12px}
+.ib-item{flex-wrap:wrap}.ib-item .ib-m{flex:1 1 calc(100% - 50px)}.ib-item .ib-px{margin-left:46px}.ib-item .ib-q{margin-left:auto}
