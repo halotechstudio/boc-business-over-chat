@@ -1,0 +1,142 @@
+/* BOC round 5: business tools and customer screens rebuilt on the reference's page structure.
+   One pattern everywhere: top bar → large light title → one hero figure → tab row → grouped hairline
+   lists (name left, value right, small label above values) → one mint action pinned at the bottom. */
+(function(){
+"use strict";
+/* ---------- shared page parts ---------- */
+const backBtn=()=>`<button class="pg-back" data-act="back" aria-label="Back">${ic(S.os==="ios"?"chev":"arrow")}</button>`;
+function page({title,sub="",hero="",tabs="",body="",cta="",right="",back=true,tab=false}){
+  return status()+(back||right?`<div class="pg-top">${back?backBtn():"<span></span>"}<span class="pg-r">${right}</span></div>`:`<div class="pg-top flat"></div>`)+
+  `<div class="body pg ${cta?"has-cta":""}"><header class="pg-h"><h1>${title}</h1>${sub?`<p>${sub}</p>`:""}</header>${hero}${tabs}${body}</div>`+
+  (cta?`<div class="pg-cta">${cta}</div>`:"")+(tab?nav():"")}
+const hero=(l,v,note="",extra="")=>`<div class="pg-hero"><div class="l">${l}</div><div class="v num">${v}</div>${note?`<div class="n">${note}</div>`:""}${extra}</div>`;
+const tabs=(key,opts,cur)=>`<div class="pg-tabs" role="tablist">${opts.map(([v,l,n])=>`<button role="tab" aria-selected="${cur===v}" class="${cur===v?"on":""}" data-act="pgtab" data-k="${key}" data-v="${v}">${l}${n!=null?` <span class="num">${n}</span>`:""}</button>`).join("")}</div>`;
+const group=(title,rows,aside="")=>rows?`<section class="pg-g"><div class="pg-gh"><h2>${title}</h2>${aside?`<span>${aside}</span>`:""}</div><div class="pg-list">${rows}</div></section>`:"";
+/* one list row: leading visual, title + subline, value + label on the right */
+function item({lead="",t,s="",v="",vl="",tone="",act="",id="",data=""}){const tag=act?"button":"div";
+  return `<${tag} class="pg-i" ${act?`data-act="${act}"`:""} ${id?`data-id="${id}"`:""} ${data}>${lead}<span class="pg-m"><b>${t}</b>${s?`<small>${s}</small>`:""}</span>${v||vl?`<span class="pg-v">${vl?`<small class="${tone?"st-"+tone:""}">${vl}</small>`:""}${v?`<span class="num">${v}</span>`:""}</span>`:""}${act?ic("chevr","s"):""}</${tag}>`}
+const sw=(color,codeTxt)=>`<span class="pg-sw" style="background:${color}"><span>${esc(codeTxt||"")}</span></span>`;
+const ico=(n,tone="")=>`<span class="pg-ic ${tone}">${ic(n,"s")}</span>`;
+const kv=(rows)=>`<dl class="pg-kv">${rows.filter(Boolean).map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</dl>`;
+const btn=(act,label,data="",cls="")=>`<button class="pg-btn ${cls}" data-act="${act}" ${data}>${label}${ic("chevr","s")}</button>`;
+act.pgtab=e=>{S["pg_"+e.dataset.k]=e.dataset.v;render()};
+const T=k=>S["pg_"+k];
+window.PG={page,hero,tabs,group,item,sw,ico,kv,btn};
+
+/* ---------- business: Products ---------- */
+screens.catalog=()=>{const cats=[...new Set(S.products.map(p=>p.cat))],cur=T("cat")||"All";
+  const ps=S.products.filter(p=>cur==="All"||p.cat===cur),value=S.products.reduce((a,p)=>a+p.stock*p.cost,0),low=S.products.filter(p=>p.stock<=p.reorder).length;
+  return page({title:"Products",sub:`${S.products.length} products in ${cats.length} categories`,
+    hero:hero("Stock value at cost",money(value),low?`<span class="st-bad">${low} running low</span>`:"All stock above reorder level"),
+    tabs:tabs("cat",[["All","All",S.products.length],...cats.map(c=>[c,c,S.products.filter(p=>p.cat===c).length])],cur),
+    body:group(cur==="All"?"All products":cur,ps.map(p=>item({lead:sw(p.color,p.code),t:esc(p.name),s:`${p.stock} ${p.unit} in stock · ${esc(p.vis)}`,v:money(p.price),vl:p.stock<=p.reorder?"Low stock":"Wholesale "+money(p.whole),tone:p.stock<=p.reorder?"bad":"",act:"pdetail",id:p.id})).join("")),
+    cta:btn("go","Add a product",'data-s="addproduct"')})};
+
+/* ---------- business: Orders ---------- */
+const orderRows=list=>list.map(d=>{const[t,l]=docState(d,"biz"),c=C(d.chat);return item({lead:av(c.name,c.color,40),t:esc(c.name),s:`${code(d.id)} · ${itemsOf(d).map(i=>i.p.name).join(", ")}`,v:money(docTotal(d)),vl:esc(l),tone:t,act:"dopen",id:d.id})}).join("");
+screens.orders=()=>{const all=Object.values(S.docs).filter(d=>d.kind==="order"&&!d.ext).reverse(),cur=T("ord")||"open";
+  const sets={open:all.filter(d=>["placed","accepted"].includes(d.status)),moving:all.filter(d=>["shipped","delivered"].includes(d.status)),done:all.filter(d=>["completed","cancelled"].includes(d.status))};
+  const held=all.filter(d=>d.pay==="held").reduce((a,d)=>a+docTotal(d),0);
+  return page({title:"Orders",sub:`${all.length} orders`,hero:hero("Held by BOC Protect",money(held),"Paid out when each buyer confirms delivery"),
+    tabs:tabs("ord",[["open","To accept or ship",sets.open.length],["moving","On the way",sets.moving.length],["done","Done",sets.done.length]],cur),
+    body:sets[cur].length?group({open:"Needs you",moving:"Shipped",done:"Completed"}[cur],orderRows(sets[cur])):`<div class="pg-empty"><b>Nothing here</b><span>${cur==="open"?"New orders from chats land here first.":"Orders move here as they progress."}</span></div>`})};
+
+/* ---------- business: Money ---------- */
+screens.money=()=>{const d=Object.values(S.docs),rec=d.filter(x=>x.kind==="invoice"&&x.status!=="paid"),pay=d.filter(x=>x.kind==="bill"&&x.status!=="paid"),cur=T("mon")||"in";
+  const max=Math.max(...S.months.map(m=>m[1])),exp=S.expenses.reduce((a,x)=>a+x.a,0);
+  const chart=`<div class="pg-chart" aria-label="Sales by month">${S.months.map((m,i)=>`<div class="${i===S.months.length-1?"cur":""}"><i style="height:${Math.round(m[1]/max*100)}%"></i><span>${m[0]}</span></div>`).join("")}</div>`;
+  const body=cur==="in"?group("Who owes you",rec.map(x=>{const c=C(x.chat),late=x.dueTs&&x.dueTs<Date.now();return item({lead:av(c.name,c.color,40),t:esc(c.name),s:code(x.id)+" · "+(late?"overdue":"due "+esc(x.due||"")),v:money(balance(x)),vl:late?"Overdue":"",tone:late?"bad":"",act:"dopen",id:x.id})}).join(""),money(rec.reduce((a,x)=>a+balance(x),0)))
+    :cur==="out"?group("Who you owe",pay.map(x=>{const c=C(x.chat);return item({lead:av(c.name,c.color,40),t:esc(c.name),s:code(x.id)+" · due "+esc(x.due),v:money(x.amount),act:"dopen",id:x.id})}).join(""),money(pay.reduce((a,x)=>a+x.amount,0)))
+    :group("Expenses this month",S.expenses.map(x=>item({lead:ico("wallet"),t:esc(x.c),s:esc(x.d),v:money(x.a)})).join(""),money(exp));
+  return page({title:"Money",sub:"Sales, payouts and the ledger",
+    hero:hero("Sales in November",money(S.months[5][1]),`${money(S.payout.held)} held · ${money(S.payout.settled)} paid to ${esc(S.payout.bank)}`,chart),
+    tabs:tabs("mon",[["in","To collect",rec.length],["out","To pay",pay.length],["exp","Expenses",S.expenses.length]],cur),body,
+    cta:cur==="exp"?`<button class="pg-btn" data-act="addexp">Add an expense${ic("chevr","s")}</button>`:""})};
+
+/* ---------- business: Purchases ---------- */
+screens.purchases=()=>{const d=Object.values(S.docs),cur=T("pur")||"active";
+  const po=d.filter(x=>x.kind==="po"),rfq=d.filter(x=>x.kind==="rfq"),bills=d.filter(x=>x.kind==="bill");
+  const row=x=>{const c=C(x.chat||(x.suppliers&&x.suppliers[0]));const[t,l]=docState(x,"biz");return item({lead:av(c?c.name:"S",c?c.color:"#566366",40),t:x.kind==="rfq"?"Request for quotes":esc(c.name),s:`${code(x.id)} · ${KIND[x.kind]}`,v:x.kind==="rfq"?"":money(x.amount||docTotal(x)),vl:esc(l),tone:t,act:"dopen",id:x.id})};
+  const active=[...rfq.filter(x=>x.status!=="closed"),...po.filter(x=>x.status!=="received"),...bills.filter(x=>x.status!=="paid")],done=[...po.filter(x=>x.status==="received"),...bills.filter(x=>x.status==="paid"),...rfq.filter(x=>x.status==="closed")];
+  const toPay=bills.filter(x=>x.status!=="paid").reduce((a,x)=>a+x.amount,0);
+  return page({title:"Purchases",sub:`${S.chats.filter(c=>c.kind==="supplier").length} suppliers`,hero:hero("Bills to pay",money(toPay),`${S.products.filter(p=>p.stock<=p.reorder).length} products need restocking`),
+    tabs:tabs("pur",[["active","In progress",active.length],["done","Completed",done.length],["sup","Suppliers"]],cur),
+    body:cur==="sup"?group("Suppliers",S.chats.filter(c=>c.kind==="supplier").map(c=>item({lead:av(c.name,c.color,40),t:esc(c.name),s:esc(c.acct||""),act:"open",id:c.id})).join(""))
+      :(cur==="active"?active:done).length?group(cur==="active"?"In progress":"Completed",(cur==="active"?active:done).map(row).join("")):`<div class="pg-empty"><b>Nothing here yet</b><span>Request quotes from suppliers to start.</span></div>`,
+    cta:`<button class="pg-btn" data-act="reorder">Request quotes from suppliers${ic("chevr","s")}</button>`})};
+
+/* ---------- business: Contracts ---------- */
+screens.contracts=()=>{const cs=Object.values(S.docs).filter(x=>x.kind==="contract"),wait=cs.filter(x=>x.status!=="signed"),done=cs.filter(x=>x.status==="signed");
+  const row=x=>{const c=C(x.chat),[t,l]=docState(x,"biz");return item({lead:ico("pen",t==="wait"?"mint":""),t:esc(x.title),s:`${esc(c.name)} · ${esc(x.term||"")}`,vl:esc(l),tone:t,act:"dopen",id:x.id})};
+  return page({title:"Contracts",sub:"Signed inside the chat with OTP",hero:hero("Waiting for a signature",String(wait.length),`${done.length} signed · every copy carries the same fingerprint`),
+    body:group("To sign",wait.map(row).join(""))+group("Signed",done.map(row).join(""))+(cs.length?"":`<div class="pg-empty"><b>No contracts yet</b><span>Send one from any chat with the + button.</span></div>`)+
+      group("Templates",TEMPLATES.map(x=>item({lead:ico("file"),t:esc(x.t),s:x.c.length+" clauses"})).join(""))})};
+
+/* ---------- business: Team ---------- */
+screens.team=()=>{const chats=n=>S.chats.filter(c=>c.assignee===n).length;
+  return page({title:"Team",sub:`${TEAM.length} people · one shared inbox`,
+    body:group("People",TEAM.map(t=>item({lead:av(t.n,t.n==="You"?BIZ.st.color:PARTY[TEAM.indexOf(t)+3],40),t:esc(t.n==="You"?"You (Owner)":t.n),s:esc(t.r),v:"",vl:chats(t.n)?chats(t.n)+" chats assigned":""})).join(""))+
+      `<section class="pg-g"><div class="pg-gh"><h2>Needs the owner's approval</h2></div><div class="pg-list pg-tg">${tg("rules","disc","Discounts above 10%","Staff quotes wait for you before the buyer sees them.")}${tg("rules","po","Purchase orders above ₹50,000","Staff purchase orders wait for you before the supplier sees them.")}</div></section>`,
+    cta:`<button class="pg-btn" data-act="teaminvite">Invite a team member${ic("chevr","s")}</button>`})};
+act.teaminvite=()=>toast("Invite link copied (simulated). Up to "+limitFor("st","users")+" people on your plan.");
+
+/* ---------- business: Plan and billing, Credit (rebuilt on the same parts) ---------- */
+screens.plan=()=>{const cur=planOf("st"),p=SEED.plans[cur],f=SEED.fees;
+  return page({title:"Plan and billing",sub:"Example pricing",hero:hero("Your plan",`${p.name} <small>${money(p.price)}/month</small>`,`${p.limits.users} users · ${p.limits.items===Infinity?"unlimited":p.limits.items} products · ${p.limits.msgs.toLocaleString("en-IN")} broadcast messages`),
+    body:group("Plans",Object.entries(SEED.plans).map(([k,x])=>item({lead:ico(k===cur?"check":"card",k===cur?"mint":""),t:x.name,s:`${x.limits.users} users · ${x.limits.items===Infinity?"unlimited":x.limits.items} products`,v:money(x.price),vl:k===cur?"Current":"per month",tone:k===cur?"good":"",act:k===cur?"":"planset",data:`data-v="${k}"`})).join(""))+
+      group("Add-ons",Object.values(SEED.addons).map(a=>item({lead:ico("plus"),t:a.name,v:money(a.price),vl:"a "+a.per})).join(""))+
+      group("Payment fees",[["UPI",f.upi+"%"],["Cards and net banking",f.card+"%"],["BOC Protect, seller pays","+"+f.protect+"%"]].map(([t,v])=>item({t,v})).join("")),
+    cta:`<button class="pg-btn" data-act="promote">Promote your shop${ic("chevr","s")}</button>`})};
+screens.credit=()=>{const rows=Object.entries(S.buyers).map(([cid,b])=>{const c=C(cid),od=Object.values(S.docs).filter(d=>d.kind==="invoice"&&d.chat===cid&&d.status!=="paid"&&d.dueTs&&d.dueTs<Date.now()).length;
+    return item({lead:av(c.name,c.color,40),t:esc(c.name),s:`${b.terms} · ${({distributor:"Distributor",retailer:"Retailer",public:"Public"})[b.list]} prices`,v:money(b.used),vl:od?od+" overdue":"of "+money(b.limit),tone:od?"bad":"",act:"go",data:`data-s="contact" data-id="${cid}"`})}).join("");
+  const used=Object.values(S.buyers).reduce((a,b)=>a+b.used,0);
+  return page({title:"Credit and dues",sub:"Who buys on credit, and on what terms",hero:hero("Out on credit",money(used),"Invoices past their Net date turn red and get a polite reminder"),body:group("Buyers on credit",rows)})};
+
+/* ---------- customer: Explore ---------- */
+const CATS={st:"Clothing",am:"Pharmacy",kc:"Food",ms:"Food",gs:"Services",ix:"Services",dm:"Food",tt:"Rentals",ld:"Wholesale",pm:"Wholesale",qd:"Electronics"};
+window.exploreView=exploreView=function(){const cur=T("exp")||"All",cats=["All",...new Set(Object.values(CATS))];
+  const ads=(ADM().ads||[]).filter(a=>a.status==="live");
+  const list=Object.entries(BIZ).filter(([k])=>cur==="All"||CATS[k]===cur);
+  const row=([k,b])=>item({lead:av(b.name,b.color,44),t:esc(b.name)+(verified(b)?" "+vbadge(b):""),s:`${esc(b.cat)} · ${esc(b.city)}`,v:b.rating?b.rating+"★":"",vl:b.rating?b.orders.toLocaleString("en-IN")+" orders":"Not verified",tone:b.rating?"":"bad",act:"bizprofile",id:k});
+  return page({title:"Explore",back:false,tab:true,sub:"Verified businesses near you",
+    body:`<div class="sbar">${ic("search","s")}<input placeholder="Search businesses and products" aria-label="Search businesses"></div>`+tabs("exp",cats.map(c=>[c,c]),cur)+
+      (ads.length&&cur==="All"?group("Sponsored",ads.map(a=>item({lead:ico("store","mint"),t:esc(a.biz)+' <span class="pg-spon">Sponsored</span>',s:esc(a.text||"Verified business on BOC")})).join("")):"")+
+      group(cur==="All"?"All businesses":cur,list.map(row).join(""),list.length+"")})};
+
+/* ---------- customer: Orders ---------- */
+window.ordersView=ordersView=function(){const os=Object.values(S.docs).filter(d=>["order","bkg","rnt","sub","ms"].includes(d.kind)&&C(d.chat)&&C(d.chat).cp==="me").reverse();
+  const open=os.filter(d=>!["completed","returned"].includes(d.status)&&!(d.kind==="ms"&&d.status==="completed")),done=os.filter(d=>!open.includes(d));
+  const row=d=>{const[t,l]=docState(d,"cp"),b=BIZ[C(d.chat).biz];const what=d.kind==="order"?itemsOf(d).map(i=>i.p.name).join(", "):d.service||d.item||KIND[d.kind];
+    const amt=d.kind==="order"?docTotal(d):d.kind==="ms"?d.total:d.kind==="sub"?d.log.length*d.rate:d.price||d.amount||0;
+    return item({lead:av(b.name,b.color,40),t:esc(b.name),s:`${esc(what)}`,v:money(amt),vl:esc(l),tone:t,act:"dopen",id:d.id})};
+  const spent=os.filter(d=>d.kind==="order").reduce((a,d)=>a+docTotal(d),0);
+  return page({title:"Your orders",back:false,tab:true,hero:hero("Spent through BOC",money(spent),"Protected by BOC Protect until you confirm delivery"),
+    body:os.length?group("In progress",open.map(row).join(""),open.length+"")+group("Completed",done.map(row).join("")):`<div class="pg-empty"><b>No orders yet</b><span>Explore businesses to start.</span></div>`})};
+
+/* ---------- customer: You ---------- */
+window.meView=meView=function(){
+  return page({title:"You",back:false,tab:true,
+    body:`<div class="pg-me">${av("Meera Nair",PARTY[5],64)}<div><b>Meera Nair</b><span>Personal account · Kochi</span></div></div>`+
+      group("Account",[item({lead:ico("phone"),t:"Phone",s:"+91 98•••••432",vl:"Verified",tone:"good"}),item({lead:ico("pin"),t:"Delivery address",s:"14 Marine Drive, Kochi 682031"}),item({lead:ico("card"),t:"Saved payment",s:"UPI · meera@okbank"}),item({lead:ico("shield"),t:"BOC Protect",s:"Your money is held until you confirm delivery",vl:"On",tone:"good"})].join(""))+
+      `<section class="pg-g"><div class="pg-gh"><h2>Personal vs business</h2></div><p class="pg-p">Personal accounts chat, shop, pay and sign. Only registered businesses can sell or send invoices, and every business shows its verification before you buy.</p></section>`,
+    cta:`<button class="pg-btn ghost" data-act="startbiz">Register a business${ic("chevr","s")}</button>`})};
+
+/* ---------- shared: business profile, shop, product ---------- */
+screens.bizprofile=v=>{const b=BIZ[v.id],ok=verified(b),mine=isBiz()&&v.id==="st",susp=isSuspended(v.id);
+  const checks=[["phone","Phone number","OTP on the registered mobile"],["gst","GSTIN",b.gstin||"No GSTIN on file"],["udyam","Udyam",b.udyam||"Not registered"],["kyc","Owner identity","Aadhaar e-KYC"],["bank","Bank account","In the business's name"]];
+  return page({title:esc(b.name)+(ok?" "+vbadge(b):""),sub:`${esc(b.cat)} · ${esc(b.city)}`,
+    hero:`<div class="pg-banner ${susp?"bad":ok?"ok":"bad"}">${ic(ok&&!susp?"shield":"alert","s")}<span><b>${susp?"Suspended by BOC":ok?"Verified business":"Not a verified business"}</b>${susp?"Orders and payments are paused.":ok?`On BOC since ${esc(b.since)}`:"Only the phone number is verified. Pay only through BOC."}</span></div>`+
+      (b.rating?`<div class="pg-stats"><div><span class="num">${b.rating}★</span><small>${b.reviews} reviews</small></div><div><span class="num">${b.orders.toLocaleString("en-IN")}</span><small>orders</small></div><div><span>${esc((b.reply||"").replace("Usually replies ","").replace("within ",""))}</span><small>to reply</small></div></div>`:""),
+    body:group("Verification",checks.map(([k,t,s])=>item({lead:ico(b.lv[k]?"check":"close",b.lv[k]?"good":"bad"),t,s:esc(s),vl:b.lv[k]?"Verified":"Not verified",tone:b.lv[k]?"good":"bad"})).join(""))+
+      group("How they work",[["Hours",b.hours],["Delivery",b.ships],["Returns",b.returns],["Disputes",b.disputes]].filter(x=>x[1]).map(([t,s])=>item({t,s:esc(s)})).join("")),
+    cta:mine?"":`<div class="pg-ctas"><button class="pg-btn ghost" data-act="shop" data-id="${v.id}">See catalog</button><button class="pg-btn" data-act="openbiz" data-id="${v.id}">Message${ic("chevr","s")}</button></div>`})};
+act.openbiz=e=>{const k=e.dataset.id,c=S.chats.find(x=>x.custOnly?x.biz===k:k==="st"&&x.id==="c1");if(c)openChat(c.id);else toast("Chat starts when you send the first message (simulated)")};
+screens.shop=v=>{const b=BIZ[v.id],ps=v.id==="st"?S.products.filter(p=>p.vis==="Everyone"):[];
+  const svc=(SERVICES[v.id]||[]).map(s=>item({lead:ico("clock"),t:esc(s.name),s:s.dur,v:money(s.price)})).join("")+(RENTALS[v.id]||[]).map(s=>item({lead:ico("store"),t:esc(s.name),v:money(s.rate),vl:"a day"})).join("")+(SUBPLANS[v.id]||[]).map(s=>item({lead:ico("box"),t:esc(s.name),v:money(s.rate),vl:"a day"})).join("");
+  return page({title:"Catalog",sub:esc(b.name),body:(ps.length?`<div class="pg-grid">${ps.map(p=>`<button class="pg-card" data-act="pdetail" data-id="${p.id}"><span class="pg-ph" style="background:${p.color}"><span>${p.code}</span></span><b>${esc(p.name)}</b><span class="num">${money(p.price)}</span></button>`).join("")}</div>`:"")+group("Offered",svc)+(!ps.length&&!svc?`<div class="pg-empty"><b>Catalog coming soon</b><span>Message the business to ask what they have.</span></div>`:"")})};
+screens.pdetail=v=>{const p=P(v.id),buyer=!isBiz();
+  return page({title:esc(p.name),sub:BIZ.st.name,hero:`<div class="pg-photo" style="background:${p.color}"><span>${p.code}</span><small>Photo shown as a colour block in this prototype</small></div>`+hero(buyer?"Price":"Retail price",money(p.price),buyer?"GST extra · BOC Protect on every order":`Wholesale ${money(p.whole)} · cost ${money(p.cost)}`),
+    body:group("Details",[item({t:"Options",s:p.vars.map(esc).join(" · ")}),item({t:"Stock",s:`${p.stock} ${p.unit} available`,vl:p.stock<=p.reorder?"Low":"",tone:"bad"}),item({t:"About",s:esc(p.desc)}),item({t:"HSN",s:p.hsn})].join("")),
+    cta:buyer?`<button class="pg-btn" data-act="cporder" data-id="${p.id}">Order · ${money(p.price)}${ic("chevr","s")}</button>`:""})};
+render();
+})();
