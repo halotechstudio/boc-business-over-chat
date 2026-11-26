@@ -40,7 +40,7 @@ S.conns=S.conns||{upi:true,razorpay:true,shiprocket:true,tally:false};
 S.payGw=S.payGw||"razorpay";
 const name=id=>(all().find(x=>x.id===id)||{}).n||id;
 window.gatewayName=()=>name(S.payGw);
-window.connLimit=()=>({free:1,starter:2,pro:99,business:99})[planOf("st")]||1;
+window.connLimit=()=>(SEED.plans[planOf("st")]||SEED.plans.free).limits.conns;
 
 /* ---------- payments go straight to the seller ---------- */
 if(S.payout&&S.payout.bank)S.payout.bank=S.payout.bank;
@@ -54,9 +54,9 @@ const _accept=bizAccept;
 window.bizAccept=bizAccept=function(o){_accept(o);const inv=D(o.invoice);if(inv&&o.pay==="paid"){inv.status="paid";inv.paidHow=o.method}};
 
 /* ---------- Connections screen ---------- */
-screens.connections=()=>{const n=Object.values(S.conns).filter(Boolean).length,lim=connLimit();
+screens.connections=()=>{const n=Object.entries(S.conns).filter(([k,v])=>v&&k!=="upi").length,lim=connLimit();
   return PG.page({title:"Connections",sub:"Use the tools you already have",
-    hero:PG.hero("Connected",`${n} <small>${lim>50?"tools":"of "+lim+" on your plan"}</small>`,`Payments go to ${esc(gatewayName())} · BOC takes no cut`),
+    hero:PG.hero("Connected",`${n} <small>${lim>50?"tools plus your UPI":"of "+lim+" on Free, plus your UPI"}</small>`,`Payments go to ${esc(gatewayName())} · BOC takes no cut`),
     body:CX.map(g=>PG.group(g.cat,g.items.map(x=>PG.item({lead:`<span class="cx-logo" style="background:${x.c}">${x.i}</span>`,t:esc(x.n)+(g.cat==="Payments"&&S.payGw===x.id?' <span class="pg-spon">Default</span>':""),s:esc(x.d),vl:S.conns[x.id]?"Connected":"Connect",tone:S.conns[x.id]?"good":"",act:"cx",data:`data-v="${x.id}"`})).join(""))+`<p class="pg-p" style="margin:6px 2px 0;font-size:12.5px">${esc(g.note)}</p>`).join(""),
     cta:`<button class="pg-btn ghost" data-act="cx" data-v="api">Don't see your tool? Use the API${ic("chevr","s")}</button>`})};
 const _rs=renderSheet;
@@ -68,7 +68,7 @@ window.renderSheet=renderSheet=function(){const sh=S.sheet;if(sh.type!=="cx")ret
     on?`<button class="btn ghost" data-act="cxoff" data-v="${x.id}" style="color:var(--bad)">Disconnect</button>`:`<button class="btn" data-act="cxgo" data-v="${x.id}">Connect ${esc(x.n)}</button>`)};
 Object.assign(act,{
   cx:e=>{S.sheet={type:"cx",v:e.dataset.v};render()},
-  cxgo:e=>{const n=Object.values(S.conns).filter(Boolean).length;if(n>=connLimit()){S.sheet.err=`Your ${SEED.plans[planOf("st")].name} plan includes ${connLimit()} connection${connLimit()>1?"s":""}. Upgrade to Growth for all of them.`;render();return}
+  cxgo:e=>{const n=Object.entries(S.conns).filter(([k,v])=>v&&k!=="upi").length;if(e.dataset.v!=="upi"&&n>=connLimit()){S.sheet.err=`Your ${SEED.plans[planOf("st")].name} plan includes ${connLimit()} connection${connLimit()>1?"s":""}. Basic and above connect every app.`;render();return}
     S.conns[e.dataset.v]=true;S.sheet=null;toast(name(e.dataset.v)+" connected (simulated)");render()},
   cxoff:e=>{const id=e.dataset.v;if(S.payGw===id){const alt=all().find(x=>x.cat==="Payments"&&S.conns[x.id]&&x.id!==id);if(!alt){S.sheet.err="Keep at least one way to get paid connected.";render();return}S.payGw=alt.id}S.conns[id]=false;S.sheet=null;toast(name(id)+" disconnected");render()},
   cxdefault:e=>{S.payGw=e.dataset.v;S.sheet=null;toast("New payment links use "+name(e.dataset.v));render()}
@@ -77,13 +77,13 @@ Object.assign(act,{
 /* ---------- plans: no transaction fee, monthly or yearly ---------- */
 screens.plan=()=>{const cur=planOf("st"),yr=S.planYear;
   return PG.page({title:"Plan and billing",sub:"BOC takes no cut of your sales",
-    hero:PG.hero("Your plan",`${SEED.plans[cur].name} <small>${money(yr?SEED.plans[cur].year:SEED.plans[cur].price)}/${yr?"year":"month"}</small>`,"Payments go straight to your own account through your own gateway"),
-    tabs:`<div class="pg-seg" style="grid-template-columns:1fr 1fr"><button class="${yr?"":"on"}" data-act="planyr" data-v="0">Monthly</button><button class="${yr?"on":""}" data-act="planyr" data-v="1">Yearly · 2 months free</button></div>`,
-    body:Object.entries(SEED.plans).map(([k,p])=>`<section class="pg-g"><div class="pl-card ${k===cur?"on":""}"><div class="pl-h"><b>${p.name}</b><span class="num">${money(yr?p.year:p.price)}<small>/${yr?"year":"month"}</small></span></div><ul>${p.features.map(f=>`<li>${ic("check","s")}${esc(f)}</li>`).join("")}</ul>${k===cur?`<div class="pl-cur">Current plan</div>`:`<button class="pg-btn ${k==="pro"?"":"ghost"}" data-act="planset" data-v="${k}">${SEED.plans[k].price>SEED.plans[cur].price?"Upgrade":"Switch"} to ${p.name}</button>`}</div></section>`).join("")+
+    hero:PG.hero("Your plan",`${SEED.plans[cur].name} <small>${SEED.plans[cur].custom||money(yr?SEED.plans[cur].year:SEED.plans[cur].price)+"/"+(yr?"year":"month")}</small>`,"Payments go straight to your own account through your own gateway"),
+    tabs:`<p class="pg-p" style="margin:0 18px 10px">14 days free on any plan, then ₹49 a month for your first 3 months. Every plan has everything you need to sell; plans differ by team size, locations and volume.</p><div class="pg-seg" style="grid-template-columns:1fr 1fr"><button class="${yr?"":"on"}" data-act="planyr" data-v="0">Monthly</button><button class="${yr?"on":""}" data-act="planyr" data-v="1">Yearly · save 25%</button></div>`,
+    body:Object.entries(SEED.plans).map(([k,p])=>`<section class="pg-g"><div class="pl-card ${k===cur?"on":""}"><div class="pl-h"><span><b>${p.name}</b><small class="pl-who">${esc(p.who)}</small></span><span class="num">${p.custom?`<small style="font-size:15px;color:var(--ink)">${p.custom}</small>`:money(yr?p.year:p.price)+`<small>/${yr?"year":"month"}</small>`}</span></div><ul>${p.features.map(f=>`<li>${ic("check","s")}${esc(f)}</li>`).join("")}</ul>${k===cur?`<div class="pl-cur">Current plan</div>`:(p.custom?`<button class="pg-btn ghost" data-act="plustalk">Talk to BOC about Plus</button>`:`<button class="pg-btn ${k==="pro"?"":"ghost"}" data-act="planset" data-v="${k}">${(SEED.plans[k].price||0)>(SEED.plans[cur].price||0)?"Upgrade":"Switch"} to ${p.name}</button>`)}</div></section>`).join("")+
       PG.group("Add-ons",Object.values(SEED.addons).map(a=>PG.item({lead:PG.ico("plus"),t:a.name,v:money(a.price),vl:"per "+a.per})).join(""))+
       PG.group("Payments",PG.item({lead:PG.ico("card"),t:"Buyers pay you directly",s:`Through ${esc(gatewayName())} and your UPI ID. Your gateway's own fees apply; BOC adds none.`,act:"go",data:'data-s="connections"'})),
     cta:`<button class="pg-btn" data-act="promote">Promote your shop${ic("chevr","s")}</button>`})};
-act.planyr=e=>{S.planYear=e.dataset.v==="1";render()};
+act.plustalk=()=>toast("BOC will call you back within a day (simulated)");act.planyr=e=>{S.planYear=e.dataset.v==="1";render()};
 
 /* ---------- entry points ---------- */
 const _more=moreView;

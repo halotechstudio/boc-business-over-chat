@@ -78,7 +78,7 @@ screens.team=()=>{const chats=n=>S.chats.filter(c=>c.assignee===n).length;
     body:group("People",TEAM.map(t=>item({lead:av(t.n,t.n==="You"?BIZ.st.color:PARTY[TEAM.indexOf(t)+3],40),t:esc(t.n==="You"?"You (Owner)":t.n),s:esc(t.r),v:"",vl:chats(t.n)?chats(t.n)+" chats assigned":""})).join(""))+
       `<section class="pg-g"><div class="pg-gh"><h2>Needs the owner's approval</h2></div><div class="pg-list pg-tg">${tg("rules","disc","Discounts above 10%","Staff quotes wait for you before the buyer sees them.")}${tg("rules","po","Purchase orders above ₹50,000","Staff purchase orders wait for you before the supplier sees them.")}</div></section>`,
     cta:`<button class="pg-btn" data-act="teaminvite">Invite a team member${ic("chevr","s")}</button>`})};
-act.teaminvite=()=>toast("Invite link copied (simulated). Up to "+limitFor("st","users")+" people on your plan.");
+act.teaminvite=()=>{const lim=limitFor("st","users");if(TEAM.length>=lim){S.sheet={type:"upgrade",reason:`Your ${SEED.plans[planOf("st")].name} plan is for ${lim===1?"one person":lim+" people"}. Add your team on Basic or Grow, or add a staff account for ₹149 a month.`};render();return}toast("Invite link copied (simulated). "+(lim===Infinity?"No limit on your team.":"Up to "+lim+" people on your plan."))};
 
 /* ---------- business: Plan and billing, Credit (rebuilt on the same parts) ---------- */
 screens.plan=()=>{const cur=planOf("st"),p=SEED.plans[cur],f=SEED.fees;

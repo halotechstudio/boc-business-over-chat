@@ -37,7 +37,6 @@ test("web page hides wholesale-only and hidden products",()=>{S.frame="web";S.we
 test("unverified business page warns",()=>{S.webBiz="qd";render();ok(document.getElementById("app").innerHTML.includes("Not a verified business"))});
 test("web order ends in the chat as Meera",()=>{S.webBiz="st";act.weborder();act.webotp2();act.webdone();eq(S.frame,"android");eq(S.view,"customer");eq(cur().name,"chat");eq(cur().id,"c1")});
 // plans (Task 8)
-test("51st product on Free opens the upgrade sheet",()=>{setView("owner");const was=S.plan;S.plan="free";const extra=[];while(S.products.length<50){const p={...S.products[0],id:"px"+S.products.length};S.products.push(p);extra.push(p.id)}
-  act.saveproduct({dataset:{}});eq(S.sheet&&S.sheet.type,"upgrade");S.sheet=null;S.plan="pro";eq(limitFor("st","items"),Infinity);S.products=S.products.filter(p=>!extra.includes(p.id));S.plan=was});
+test("Free never limits products; adding staff opens the upgrade",()=>{setView("owner");const was=S.plan;S.plan="free";eq(limitFor("st","items"),Infinity);S.sheet=null;act.teaminvite();eq(S.sheet&&S.sheet.type,"upgrade");S.sheet=null;S.plan="pro";eq(limitFor("st","users"),5);S.plan=was});
 test("BOC takes no cut of payments",()=>{eq(feeFor("card",true),0);eq(feeFor("upi",false),0)});
 test("new ad starts pending and only verified can promote",()=>{BOCStore.reset();const ad=createAd("explore","day",1393);eq(ad.status,"pending");ok(BOCStore.load().admin.ads.some(a=>a.id===ad.id));BOCStore.reset()});

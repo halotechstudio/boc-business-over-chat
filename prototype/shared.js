@@ -16,12 +16,13 @@
   try{window.addEventListener("storage",e=>{if(e.key===KEY){const s=BOCStore.load();subs.forEach(f=>f(s))}})}catch(e){}
 
   const PLANS={
-    free:{name:"Free",price:0,year:0,limits:{users:1,items:25,msgs:100},features:["Unlimited chats, any number","Catalog up to 25 items","Payment links to your own UPI","20 invoices a month"]},
-    starter:{name:"Starter",price:199,year:1990,limits:{users:2,items:200,msgs:500},features:["Unlimited GST invoices and khata","Labels and CRM","Auto-replies and quick replies","1 connection (gateway, courier or accounting)"]},
-    pro:{name:"Growth",price:599,year:5990,limits:{users:5,items:Infinity,msgs:2000},features:["All connections: gateways, couriers, Tally and Zoho","AI assistant, 500 replies a month","Credit terms, purchasing, contracts","Statuses, groups and broadcasts"]},
-    business:{name:"Business",price:1499,year:14990,limits:{users:20,items:Infinity,msgs:10000},features:["E-invoice and e-way bill","Multiple shops and warehouses","API and webhooks","Priority support"]}
+    free:{name:"Starter",price:99,year:891,limits:{users:1,items:Infinity,msgs:100,ai:20,conns:1,locations:1},who:"Selling on your own through chats and statuses",features:["Sell in chats and statuses with payment links","Unlimited products and GST invoices","Your UPI plus one app","100 broadcasts, 20 AI replies a month"]},
+    basic:{name:"Basic",price:399,year:3588,limits:{users:2,items:Infinity,msgs:500,ai:100,conns:99,locations:1},who:"A small shop getting organised",features:["Everything in Starter","Web shop page from your number or QR","Khata, labels and CRM, groups","All apps: gateway, courier, Tally, Zoho","2 staff accounts"]},
+    pro:{name:"Grow",price:999,year:8988,limits:{users:5,items:Infinity,msgs:2000,ai:1000,conns:99,locations:2},who:"A growing business with a team",features:["Everything in Basic","5 staff accounts with roles and approvals","Credit terms, purchasing, contracts","2,000 broadcasts and 1,000 AI replies a month","Up to 2 shops or warehouses"]},
+    business:{name:"Advanced",price:2499,year:22488,limits:{users:15,items:Infinity,msgs:10000,ai:5000,conns:99,locations:5},who:"Wholesalers and distributors at scale",features:["Everything in Grow","15 staff accounts, up to 5 locations","Price lists per buyer, e-invoice and e-way bill","Custom reports, API and webhooks","Priority support"]},
+    plus:{name:"Plus",price:null,year:null,custom:"From ₹15,000/month",limits:{users:Infinity,items:Infinity,msgs:Infinity,ai:Infinity,conns:99,locations:Infinity},who:"Brands and distributors with dealer networks",features:["Everything in Advanced, without limits","Your dealers and retailers on BOC under your brand","Dedicated success manager","Custom contracts and SLAs"]}
   };
-  const ADDONS={ai:{name:"AI replies pack",price:199,per:"1,000 replies"},broadcast:{name:"Extra broadcasts",price:0.15,per:"message"},seat:{name:"Extra team member",price:99,per:"month"},esign:{name:"E-signature",price:20,per:"contract"}};
+  const ADDONS={seat:{name:"Extra staff account",price:149,per:"month"},broadcast:{name:"Extra broadcasts",price:0.15,per:"message"},ai:{name:"Extra AI replies",price:99,per:"1,000 replies"},esign:{name:"E-signature",price:15,per:"contract"}};
   /* BOC takes no cut of payments: buyers pay sellers directly through the seller's own gateway */
   const FEES={upi:0,card:0,netbanking:0,protect:0};
   const ADPRICE={cpc:5,day:199};
